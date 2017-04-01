@@ -1,0 +1,113 @@
+{
+  function makeInteger(o) {
+    return parseInt(o.join(""), 10);
+  }
+}
+
+Expression
+  = head:Line tail:(_ Line)* {
+      head.inst.num = 0;
+      if (head.marker) {
+          head.inst.marker = head.marker;
+        }
+      var result = [head.inst];
+
+      for (var i = 0; i < tail.length; i++) {
+        var el = tail[i][1];
+        el.inst.num = i + 1;
+        if (el.marker) {
+          el.inst.marker = el.marker;
+        }
+        result.push(tail[i][1].inst);
+      }
+
+      return result;
+    }
+
+Line
+  = marker:(LabelMarker?) _ inst:Instruction
+  { return {inst: inst, marker: marker}; }
+
+Instruction
+  = op:IntOperation _ rs:IntRegister _ "," _ rt:IntRegister _
+    "," _ rd:IntRegister
+    { return {type: "int", reg: "int", op: op, rs: rs, rt: rt, rd: rd}; }
+  / op:IntImOperation _ rs:IntRegister _ "," _ rt:IntRegister _
+    "," _ im:Immediate
+    { return {type: "inti", reg: "int", op: op, rs: rs, rt: rt, im: im}; }
+  / op:FloatOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
+    "," _ rd:FloatRegister
+    { return {type: "float", reg: "float", op: op, rs: rs, rt: rt, rd: rd}; }
+  / op:FloatImOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
+    "," _ im:Immediate
+    { return {type: "floati", reg: "float", op: op, rs: rs, rt: rt, im: im}; }
+  / op:IntMemOperation _ rs:IntRegister _ "," _ im:Immediate _
+    "(" rt:IntRegister ")"
+    { return {type: "mem", reg: "int", op: op, rs: rs, rt: rt, im: im}; }
+  / op:FloatMemOperation _ rs:FloatRegister _ "," _ im:Immediate _
+    "(" rt:FloatRegister ")"
+    { return {type: "mem", reg: "float", op: op, rs: rs, rt: rt, im: im}; }
+  / op:IntBranchOperation _ rs:IntRegister _ "," _ rt:IntRegister _
+    "," _ label:Label _
+    { return {type: "branch", reg: "int", op: op, rs: rs, rt: rt, label: label}; }
+  / op:IntBranchZOperation _ rs:IntRegister _ "," _ label:Label
+    { return {type: "branch", reg: "int", op: op, rs: rs, label: label}; }
+  / op:FloatBranchOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
+    "," _ label:Label _
+    { return {type: "branch", reg: "float", op: op, rs: rs, rt: rt, label: label}; }
+  / op:FloatBranchZOperation _ rs:FloatRegister _ "," _ label:Label
+    { return {type: "branch", reg: "float", op: op, rs: rs, label: label}; }
+
+Register
+  = IntRegister / FloatRegister
+
+IntOperation
+  = "ADD" / "SUB" / "DIV" / "MULT" { return text(); }
+
+IntImOperation
+  = "ADDI" / "SUBI" / "DIV.I" / "MULT.I" { return text(); }
+
+IntMemOperation
+  = "LW" / "SW" { return text(); }
+
+FloatMemOperation
+  = "LW.S" / "SW.S" { return text(); }
+
+FloatOperation
+  = "ADD.S" / "SUB.S" / "DIV.S" / "MULT.S" { return text(); }
+
+FloatImOperation
+  = "ADDI.S" / "SUBI.S" / "DIVI.S" / "MULTI.S" { return text(); }
+
+IntBranchOperation
+  = "BEQ" { return text(); }
+
+IntBranchZOperation
+  = "BEQZ" { return text(); }
+
+FloatBranchOperation
+  = "BEQ.S" { return text(); }
+
+FloatBranchZOperation
+  = "BEQZ.S" { return text(); }
+
+LabelMarker
+  = label:Label ":" { return label; }
+
+Label
+  = label:([A-Z]+) { return label.join(""); }
+
+IntRegister
+  = "R" reg:Integer { return reg; }
+
+FloatRegister
+  = "F" reg:Integer { return reg; }
+
+Immediate
+  = negative:("-"?) num:Integer { return negative ? num * -1 : num }
+
+Integer
+  = digits:[0-9]+ { return makeInteger(digits); }
+
+_ "whitespace"
+  = [ \t\n\r]*

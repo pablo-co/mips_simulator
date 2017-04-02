@@ -5,3 +5,4 @@
 //= require "vendor/ace/mode-javascript"
 //= require "editor"
 //= require "parser"
+//= require "mips_pipeline"

@@ -6,10 +6,14 @@ title: Welcome to Middleman
   <%= javascript_include_tag "https://github.com/pegjs/pegjs/releases/download/v0.10.0/peg-0.10.0.min.js" %>
 <% end %>
 
-<div id="editor">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}</div>
+<div id="editor">LW R2, 0(R1)
+LW R3, 8(R1)
+ADD R4, R2, R3
+SW R4, 0(R1)</div>
+
+<input id="parse_button" type="button" onclick="callParser()" value="Parse"/>
+
+<textarea id="parse_result_area"></textarea>
 
 <%= link_to(
   "Read Documentation",

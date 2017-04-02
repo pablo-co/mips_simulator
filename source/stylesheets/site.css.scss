@@ -22,3 +22,17 @@ a {
   margin-bottom: 1rem;
   width: 10rem;
 }
+
+#editor { 
+    width: 50%;
+    height: 500px;
+    float:left;
+    display: inline;
+}
+
+#parse_result_area {
+  width:25%;
+  height: 100px;
+  float:left;
+  display:inline;
+}

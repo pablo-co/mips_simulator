@@ -9,6 +9,7 @@ function callParser() {
   		printError(err);
   		return;
   	}
+
   	var nonexistentLabels = obtainNonexistentLabels(instruction_set);
   	if (nonexistentLabels.length > 0) {
   		printError("The following markers are used in branches or jumps without being defined: " + nonexistentLabels);

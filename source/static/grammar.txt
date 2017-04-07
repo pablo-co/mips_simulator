@@ -57,6 +57,8 @@ Instruction
     { return {type: "branch", reg: "float", op: op, rs: rs, rt: rt, label: label}; }
   / op:FloatBranchZOperation _ rs:FloatRegister _ "," _ label:Label
     { return {type: "branch", reg: "float", op: op, rs: rs, label: label}; }
+  / op:JumpOperation _ label:Label _
+    { return {type: "jump", label: label}; }
 
 Register
   = IntRegister / FloatRegister
@@ -81,6 +83,9 @@ FloatImOperation
 
 IntBranchOperation
   = "BEQ" { return text(); }
+
+JumpOperation
+  = "J" { return text(); }
 
 IntBranchZOperation
   = "BEQZ" { return text(); }

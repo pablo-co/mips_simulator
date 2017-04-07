@@ -6,4 +6,5 @@
 //= require "editor"
 //= require "parser"
 //= require "mips_pipeline"
+//= require "pipeline_creation"
 //= require "memory"

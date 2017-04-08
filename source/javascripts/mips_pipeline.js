@@ -15,6 +15,7 @@ function callParser() {
   		printError("The following markers are used in branches or jumps without being defined: " + nonexistentLabels);
   		return;
   	}
+  	return instruction_set;
 }
 
 function obtainNonexistentLabels(instruction_set) {

@@ -67,7 +67,7 @@ IntOperation
   = "ADD" / "SUB" / "DIV" / "MULT" { return text(); }
 
 IntImOperation
-  = "ADDI" / "SUBI" / "DIV.I" / "MULT.I" { return text(); }
+  = "ADDI" / "SUBI" / "DIVI" / "MULTI" { return text(); }
 
 IntMemOperation
   = "LW" / "SW" { return text(); }
@@ -82,19 +82,19 @@ FloatImOperation
   = "ADDI.S" / "SUBI.S" / "DIVI.S" / "MULTI.S" { return text(); }
 
 IntBranchOperation
-  = "BEQ" { return text(); }
+  = "BEQ" / "BNE" { return text(); }
 
 JumpOperation
   = "J" { return text(); }
 
 IntBranchZOperation
-  = "BEQZ" { return text(); }
+  = "BEQZ" / "BNEZ" { return text(); }
 
 FloatBranchOperation
-  = "BEQ.S" { return text(); }
+  = "BEQ.S" / "BNE.S" { return text(); }
 
 FloatBranchZOperation
-  = "BEQZ.S" { return text(); }
+  = "BEQZ.S" / "BNEZ.S"  { return text(); }
 
 LabelMarker
   = label:Label ":" { return label; }

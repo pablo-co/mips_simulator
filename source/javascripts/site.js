@@ -9,3 +9,4 @@
 //= require "pipeline_creation"
 //= require "pipeline_execution"
 //= require "memory"
+//= require "registers"

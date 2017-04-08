@@ -5,13 +5,18 @@ var previous_clock_cycles = []
 function nextClockCycle(pipeline, instruction_set) {
 	current_clock_cycle += 1;
 	moveAllInstructionsCurrentlyInPipeline(pipeline);
-	performAllStageOperations(pipeline);
 	tryToInsertNewInstructionIntoPipeline(pipeline,instruction_set);
+	performAllStageOperations(pipeline);
 }
 
 function moveAllInstructionsCurrentlyInPipeline(pipeline) {
 	pipeline.execution_graph.forEach(function(stage) {
 		if (stage.instruction == null) {
+			return;
+		}
+		//Instruction has to be stalled if operation was not successful.
+		//It will be reattempted in the current clock cycle.
+		if (stage.operation_performed == null) {
 			return;
 		}
 		if(stage.next_stage == null) {
@@ -38,10 +43,7 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
 
 function performAllStageOperations(pipeline) {
 	pipeline.execution_graph.forEach(function(stage) {
-		if (stage.instruction == null) {
-			return;
-		}
-		if (stage.stage_operation == null) {
+		if (stage.instruction == null || stage.stage_operation == null) {
 			return;
 		}
 		stage.stage_operation();
@@ -66,10 +68,10 @@ function deduceExecutionPipeline(instruction) {
 	//2 MULT
 	//3 FP MULT
 
-	if (instruction.op == "MULT.S" || instruction.op == "DIV.S") {
+	if (instruction.op == "MULT.S" || instruction.op == "DIV.S" || instruction.op == "MULTI.S" || instruction.op == "DIVI.S") {
 		return 3;
 	}
-	if (instruction.op == "MULT" || instruction.op == "DIV") {
+	if (instruction.op == "MULT" || instruction.op == "DIV" || instruction.op == "MULTI" || instruction.op == "DIVI") {
 		return 2;
 	}
 	if (instruction.reg == "float" && !(instruction.op == "LW.S" || instruction.op == "SW.S")) {

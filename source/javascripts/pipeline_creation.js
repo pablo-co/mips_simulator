@@ -1,8 +1,14 @@
-function createPipeline(superscaling_amount) {
+var float_registers;
+var integer_registers;
+
+function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount) {
 	
 	var stages = [];
 	var executionStages = [];
 	var fetchingStages = [];
+
+	float_registers = initializeRegisters(float_registers_amount);
+	integer_registers = initializeRegisters(int_registers_amount);
 
 	var WB = createStage("WB",null,null);
 	stages.push(WB);
@@ -67,4 +73,33 @@ function createStage(name,next_stage,stage_operation) {
 		instruction: null,
 		stage_operation: stage_operation
 	}
+}
+
+function initializeRegisters(amount_of_registers) {
+	var registers = [];
+	for (i = 0; i < amount_of_registers; i ++) {
+		registers.push({value:0,available_for_reading:true,amount_reading:0,available_for_writing:true})
+	}	
+}
+
+function wbOperation(instruction) {
+	var register_array;
+	if (instruction.reg == "int") {
+		register_array = integer_registers;
+	} else {
+		register_array = float_registers;
+	}
+	if (instruction.op_result != null) {
+		register_array[instruction.rs] = instruction.op_result;
+	}
+	if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
+		//R type instructions
+		freeRegistersAfterWriting(register_array[instruction.rs]);
+		freeRegistersAfterReading(register_array[instruction.rt]);
+		if (instruction.rd != null) {
+			freeRegistersAfterReading(register_array[instruction.rd]);
+		}
+	}
+
+	//TODO:Exceptions
 }

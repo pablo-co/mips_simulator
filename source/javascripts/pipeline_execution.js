@@ -16,7 +16,7 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
 		}
 		//Instruction has to be stalled if operation was not successful.
 		//It will be reattempted in the current clock cycle.
-		if (stage.operation_performed == null) {
+		if ((stage.stage_operation != null) && (stage.operation_performed == null || stage.operation_performed == false)) {
 			return;
 		}
 		if(stage.next_stage == null) {
@@ -31,7 +31,7 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
 			}	
 		}
 		else {
-			var execution_stage = pipeline.execution_stages[deduce_execution_pipeline(stage.instruction)];
+			var execution_stage = pipeline.execution_stages[deduceExecutionPipeline(stage.instruction)];
 			if (execution_stage.instruction == null) {
 				execution_stage.instruction = stage.instruction;
 				stage.instruction = null;
@@ -46,7 +46,7 @@ function performAllStageOperations(pipeline) {
 		if (stage.instruction == null || stage.stage_operation == null) {
 			return;
 		}
-		stage.stage_operation();
+		stage.operation_performed = stage.stage_operation(stage.instruction);
 	});
 }
 
@@ -56,8 +56,10 @@ function tryToInsertNewInstructionIntoPipeline(pipeline,instruction_set){
 			var instruction_to_insert = instruction_set.filter(function(instruction) {
 				return instruction.cycle_started == null;
 			})[0];
-			instruction_to_insert.cycle_started = current_clock_cycle;
-			fetching_stage.instruction = instruction_to_insert;
+			if (instruction_to_insert != null) {	
+				instruction_to_insert.cycle_started = current_clock_cycle;
+				fetching_stage.instruction = instruction_to_insert;
+			}
 		}
 	});
 }

@@ -1,3 +1,6 @@
+var global_pipeline;
+var global_instructions;
+
 function callParser() {
   	var editor = ace.edit("editor");
   	$("#parse_result_area")[0].value = "";
@@ -15,7 +18,14 @@ function callParser() {
   		printError("The following markers are used in branches or jumps without being defined: " + nonexistentLabels);
   		return;
   	}
+  	global_instructions = instruction_set;
+  	global_pipeline = createPipeline(1,32,32); 
   	return instruction_set;
+}
+
+function callNextClockCycle() {
+	nextClockCycle(global_pipeline,global_instructions);
+	$("#parse_result_area")[0].value = current_clock_cycle;
 }
 
 function obtainNonexistentLabels(instruction_set) {

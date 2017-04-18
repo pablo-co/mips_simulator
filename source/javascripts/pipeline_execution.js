@@ -53,12 +53,10 @@ function performAllStageOperations(pipeline) {
 function tryToInsertNewInstructionIntoPipeline(pipeline,instruction_set){
 	pipeline.fetching_stages.forEach(function(fetching_stage) {
 		if (fetching_stage.instruction == null){
-			var instruction_to_insert = instruction_set.filter(function(instruction) {
-				return instruction.cycle_started == null;
-			})[0];
-			if (instruction_to_insert != null) {	
-				instruction_to_insert.cycle_started = current_clock_cycle;
-				fetching_stage.instruction = instruction_to_insert;
+			if (instruction_set[next_instruction] != null) {	
+				instruction_set[next_instruction].cycle_started = current_clock_cycle;
+				fetching_stage.instruction = instruction_set[next_instruction];
+				next_instruction++;
 			}
 		}
 	});

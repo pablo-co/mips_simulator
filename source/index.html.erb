@@ -6,10 +6,13 @@ title: Welcome to Middleman
   <%= javascript_include_tag "https://github.com/pegjs/pegjs/releases/download/v0.10.0/peg-0.10.0.min.js" %>
 <% end %>
 
-<div id="editor">ADDI R1, R1, 3
+<div id="editor">LOOP: ADDI R1, R1, 3
 ADDI R2, R2, 4
 ADD R3, R1, R2
-SW R3, 0(R0)</div>
+SW R3, 0(R0)
+BNEZ R3, LOOP
+ADDI R4, R4, 5
+ADDI R5, R5, 6</div>
 
 <input id="parse_button" type="button" onclick="callParser()" value="Parse"/>
 <input id="next_cycle_button" type="button" onclick="callNextClockCycle()" value="Next cycle"/>

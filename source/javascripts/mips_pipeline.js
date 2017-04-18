@@ -19,7 +19,7 @@ function callParser() {
   		return;
   	}
   	global_instructions = instruction_set;
-  	global_pipeline = createPipeline(1,32,32); 
+  	global_pipeline = createPipeline(1,32,32,false); 
   	return instruction_set;
 }
 

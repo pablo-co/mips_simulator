@@ -1,8 +1,9 @@
 var float_registers;
 var integer_registers;
 var memory = build_memory(10000);
+var next_instruction = 0;
 
-function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount) {
+function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,brach_delay_slots) {
 	
 	var stages = [];
 	var executionStages = [];
@@ -26,13 +27,13 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
 	var FPMULT = [7];
 
 	if (superscaling_amount == 1) {
-		FP[4] = createStage("FP5",MEM,null);
-		MULT[3] = createStage("MULT4",MEM,null);
-		FPMULT[6] = createStage("FPMULT7",MEM.null);
+		FP[4] = createStage("FP5",MEM,fpOperation);
+		MULT[3] = createStage("MULT4",MEM,multOperation);
+		FPMULT[6] = createStage("FPMULT7",MEM,fpmultOperation);
 	} else {
-		FP[4] = createStage("FP5",WB.null);
-		MULT[3] = createStage("MULT4",WB.null);
-		FPMULT[6] = createStage("FPMULT7",WB,null);
+		FP[4] = createStage("FP5",WB.fpOperation);
+		MULT[3] = createStage("MULT4",WB,multOperation);
+		FPMULT[6] = createStage("FPMULT7",WB,fpmultOperation);
 	}
 
 	stages.push(FP[4]);
@@ -64,7 +65,7 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
 		fetchingStages.push(IF);
 	}
 
-	return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages};
+	return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:brach_delay_slots};
 };
 
 function createStage(name,next_stage,stage_operation) {
@@ -146,12 +147,66 @@ function exOperation(instruction) {
 		case "ADD":
 			instruction.op_result = integer_registers[instruction.rt].value + integer_registers[instruction.rd].value; 
 			break;
+		case "SUB":
+			instruction.op_result = integer_registers[instruction.rt].value - integer_registers[instruction.rd].value; 
+			break;
+		case "SUB":
+			instruction.op_result = integer_registers[instruction.rt].value - integer_registers[instruction.rd].value; 
+			break;
 		case "ADDI":
 			instruction.op_result = integer_registers[instruction.rt].value + instruction.im; 
 			break;
+		case "SUBI":
+			instruction.op_result = integer_registers[instruction.rt].value - instruction.im; 
+			break;
 		case "LW":
 		case "SW":
+		case "LW.S":
+		case "SW.S":
 			instruction.mem_addr = integer_registers[instruction.rt].value + instruction.im;
+			break;
+		case "BEQ":
+			if (integer_registers[instruction.rs].value == integer_registers[instruction.rt].value) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BNE":
+			if (integer_registers[instruction.rs].value != integer_registers[instruction.rt].value) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BEQZ":
+			if (integer_registers[instruction.rs].value == 0) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BNEZ":
+			if (integer_registers[instruction.rs].value != 0) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BEQ.S":
+			if (float_registers[instruction.rs].value == float_registers[instruction.rt].value) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BNE.S":
+			if (float_registers[instruction.rs].value != float_registers[instruction.rt].value) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BEQZ.S":
+			if (float_registers[instruction.rs].value == 0) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "BNEZ.S":
+			if (float_registers[instruction.rs].value != 0) {
+				doTakeBranch(instruction);
+			}
+			break;
+		case "J":
+			doTakeBranch(instruction);
 			break;
 		default:
 			throw "Unimplemented operation";
@@ -159,6 +214,70 @@ function exOperation(instruction) {
 	}
 	return true;
 }
+
+function fpOperation(instruction) {
+	switch(instruction.op) {
+		case "ADD.S":
+			instruction.op_result = float_registers[instruction.rt].value + float_registers[instruction.rd].value; 
+			break;
+		case "SUB.S":
+			instruction.op_result = float_registers[instruction.rt].value - float_registers[instruction.rd].value; 
+			break;
+		case "ADDI.S":
+			instruction.op_result = float_registers[instruction.rt].value + instruction.im; 
+			break;
+		case "SUBI.S":
+			instruction.op_result = float_registers[instruction.rt].value - instruction.im; 
+			break;
+		default:
+			throw "Unimplemented operation";
+			break;
+	}
+	return true;
+}
+
+function multOperation(instruction) {
+	switch(instruction.op) {
+		case "MULT":
+			instruction.op_result = integer_registers[instruction.rt].value * integer_registers[instruction.rd].value; 
+			break;
+		case "DIV":
+			instruction.op_result = Math.floor(integer_registers[instruction.rt].value / integer_registers[instruction.rd].value); 
+			break;
+		case "MULTI":
+			instruction.op_result = integer_registers[instruction.rt].value * instruction.im; 
+			break;
+		case "DIVI":
+			instruction.op_result = Math.floor(integer_registers[instruction.rt].value / instruction.im); 
+			break;
+		default:
+			throw "Unimplemented operation";
+			break;
+	}
+	return true;
+}
+
+function fpmultOperation(instruction) {
+	switch(instruction.op) {
+		case "MULT.S":
+			instruction.op_result = float_registers[instruction.rt].value * float_registers[instruction.rd].value; 
+			break;
+		case "DIV.S":
+			instruction.op_result = Math.floor(float_registers[instruction.rt].value / float_registers[instruction.rd].value); 
+			break;
+		case "MULTI.S":
+			instruction.op_result = float_registers[instruction.rt].value * instruction.im; 
+			break;
+		case "DIVI.S":
+			instruction.op_result = Math.floor(float_registers[instruction.rt].value / instruction.im); 
+			break;
+		default:
+			throw "Unimplemented operation";
+			break;
+	}
+	return true;
+}
+
 
 function idOperation(instruction) {
 	var register_array;
@@ -196,7 +315,25 @@ function idOperation(instruction) {
 			}
 
 		}
-		
 	}
+
+	//TODO:Check for structural hazards.
 	return true;
+}
+
+function doTakeBranch(instruction){
+	instruction_counter = 0;
+	global_instructions.forEach(function(target) {
+		if (target.marker != null && target.marker == instruction.label) { 
+			next_instruction = instruction_counter;
+		}
+		instruction_counter++;
+	});
+	if (global_pipeline.brach_delay_slots != true) {
+		global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+			fetching_stage.instruction = null;
+			fetching_stage.next_stage.instruction = null;
+		});
+	}
+
 }

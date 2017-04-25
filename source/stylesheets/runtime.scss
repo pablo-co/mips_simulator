@@ -1,0 +1,7 @@
+.code-runtime {
+  @include grid-column(6);
+
+  //@include media($medium-screen-up) {
+  //  @include grid-column(12);
+  //}
+}

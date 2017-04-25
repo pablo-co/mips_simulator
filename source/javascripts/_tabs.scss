@@ -1,0 +1,9 @@
+.tabs {
+  .tab {
+    display: none;
+  }
+
+  .tab.is-open, .tab.is-active {
+    display: inherit;
+  }
+}

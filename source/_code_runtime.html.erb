@@ -1,0 +1,18 @@
+<script id="code-runtime-template" class="template" type="text/x-handlebars-template">
+  <div class="list-group">
+  {{#each lines}}
+    <div class="list-group-item {{#if active}}active{{/if}}">
+      {{#each stages}}
+        {{#if this}}
+          <span class="badge pos-{{@index}}">
+          {{name}}
+            <span class="cycle">{{cycle}}</span>
+          </span>
+        {{else}}
+          <span class="badge empty">NOP</span>
+        {{/if}}
+      {{/each}}
+      {{body}}
+    </div>
+  {{/each}}
+</script>

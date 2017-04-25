@@ -1,8 +1,8 @@
-// This is where it all goes :)
 //= require "jquery"
 //= require "vendor/ace/ace"
 //= require "vendor/ace/theme-monokai"
 //= require "vendor/ace/mode-javascript"
+//= require "templates"
 //= require "editor"
 //= require "parser"
 //= require "mips_pipeline"
@@ -10,3 +10,4 @@
 //= require "pipeline_execution"
 //= require "memory"
 //= require "registers"
+//= require "bootstrap"

@@ -31,34 +31,34 @@ Line
 Instruction
   = op:IntOperation _ rs:IntRegister _ "," _ rt:IntRegister _
     "," _ rd:IntRegister
-    { return {type: "int", reg: "int", op: op, rs: rs, rt: rt, rd: rd}; }
+    { return {type: "int", reg: "int", op: op, rs: rs, rt: rt, rd: rd, text: text()}; }
   / op:IntImOperation _ rs:IntRegister _ "," _ rt:IntRegister _
     "," _ im:Immediate
-    { return {type: "inti", reg: "int", op: op, rs: rs, rt: rt, im: im}; }
+    { return {type: "inti", reg: "int", op: op, rs: rs, rt: rt, im: im, text: text()}; }
   / op:FloatOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
     "," _ rd:FloatRegister
-    { return {type: "float", reg: "float", op: op, rs: rs, rt: rt, rd: rd}; }
+    { return {type: "float", reg: "float", op: op, rs: rs, rt: rt, rd: rd, text: text()}; }
   / op:FloatImOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
     "," _ im:Immediate
-    { return {type: "floati", reg: "float", op: op, rs: rs, rt: rt, im: im}; }
+    { return {type: "floati", reg: "float", op: op, rs: rs, rt: rt, im: im, text: text()}; }
   / op:IntMemOperation _ rs:IntRegister _ "," _ im:Immediate _
     "(" rt:IntRegister ")"
-    { return {type: "mem", reg: "int", op: op, rs: rs, rt: rt, im: im}; }
+    { return {type: "mem", reg: "int", op: op, rs: rs, rt: rt, im: im, text: text()}; }
   / op:FloatMemOperation _ rs:FloatRegister _ "," _ im:Immediate _
     "(" rt:IntRegister ")"
-    { return {type: "mem", reg: "float", op: op, rs: rs, rt: rt, im: im}; }
+    { return {type: "mem", reg: "float", op: op, rs: rs, rt: rt, im: im, text: text()}; }
   / op:IntBranchOperation _ rs:IntRegister _ "," _ rt:IntRegister _
     "," _ label:Label _
-    { return {type: "branch", reg: "int", op: op, rs: rs, rt: rt, label: label}; }
+    { return {type: "branch", reg: "int", op: op, rs: rs, rt: rt, label: label, text: text()}; }
   / op:IntBranchZOperation _ rs:IntRegister _ "," _ label:Label
-    { return {type: "branch", reg: "int", op: op, rs: rs, label: label}; }
+    { return {type: "branch", reg: "int", op: op, rs: rs, label: label, text: text()}; }
   / op:FloatBranchOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
     "," _ label:Label _
-    { return {type: "branch", reg: "float", op: op, rs: rs, rt: rt, label: label}; }
+    { return {type: "branch", reg: "float", op: op, rs: rs, rt: rt, label: label, text: text()}; }
   / op:FloatBranchZOperation _ rs:FloatRegister _ "," _ label:Label
-    { return {type: "branch", reg: "float", op: op, rs: rs, label: label}; }
+    { return {type: "branch", reg: "float", op: op, rs: rs, label: label, text: text()}; }
   / op:JumpOperation _ label:Label _
-    { return {type: "jump", label: label}; }
+    { return {type: "jump", label: label, text: text()}; }
 
 Register
   = IntRegister / FloatRegister

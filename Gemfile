@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "bitters"
 gem "bourbon"
+gem "bootstrap-sass"
 gem "jquery-middleman"
 gem "middleman", "~> 4.2"
 gem "middleman-autoprefixer", "~> 2.7"

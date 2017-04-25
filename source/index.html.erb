@@ -1,20 +1,78 @@
----
-title: Welcome to Middleman
----
-
 <% content_for :assets do %>
   <%= javascript_include_tag "https://github.com/pegjs/pegjs/releases/download/v0.10.0/peg-0.10.0.min.js" %>
+  <%= javascript_include_tag "http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-latest.js" %>==
 <% end %>
 
-<div id="editor">LOOP: ADDI R1, R1, 3
-ADDI R2, R2, 4
-ADD R3, R1, R2
-SW R3, 0(R0)
-BNEZ R3, LOOP
-ADDI R4, R4, 5
-ADDI R5, R5, 6</div>
-
-<input id="parse_button" type="button" onclick="callParser()" value="Parse"/>
-<input id="next_cycle_button" type="button" onclick="callNextClockCycle()" value="Next cycle"/>
 
 <textarea id="parse_result_area"></textarea>
+<%= partial "code_runtime" %>
+<%= partial "memory" %>
+
+<ul class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="active">
+    <a id="code-link" href="#code" aria-controls="code" role="tab" data-toggle="tab">Code</a>
+  </li>
+  <li role="presentation">
+    <a id="runtime-link" href="#runtime" aria-controls="runtime" role="tab" data-toggle="tab">Runtime</a>
+  </li>
+</ul>
+
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane active" id="code">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="tab editor-container">
+          <div class="row">
+            <div class="col-xs-12">
+              <div id="editor" class="editor">LOOP: LW R2, 0(R1)
+LW R3, 8(R1)
+ADD R4, R2, R3
+SW R4, 0(R1)
+BEQZ R4, LOOP</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12">
+              <button id="parse_button" class="btn btn-primary" onClick="callParser()">Parse</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer" id="code-errors"></div>
+    </div>
+  </div>
+  <div role="tabpanel" class="tab-pane" id="runtime">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="btn-group" role="group" aria-label="...">
+          <button type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+          </button>
+          <button id="play" type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-play" aria-hidden="true" onClick="play();"></span>
+          </button>
+          <button id="pause" type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-pause" aria-hidden="true" onClick="pause();"></span>
+          </button>
+          <button type="button" class="btn btn-default" onClick="callNextClockCycle();">
+            <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div id="runtime-container" class="col-xs-12 col-md-6">
+          </div>
+          <div class="cols-xs-12 col-md-6">
+            <div id="int-register-file" class="cols-xs-12 col-md-3">
+            </div>
+            <div id="float-register-file" class="cols-xs-12 col-md-3">
+            </div>
+            <div id="memory-file" class="cols-xs-12 col-md-6">
+            </div>
+        </div>
+      </div>
+      <div class="panel-footer"></div>
+    </div>
+  </div>
+</div>

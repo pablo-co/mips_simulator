@@ -3,8 +3,9 @@ var integer_registers;
 var memory = build_memory(10000);
 var next_instruction = 0;
 var forwarding_enabled = false;
+var branch_prediction_taken = false;
 
-function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,brach_delay_slots,forwarding) {
+function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,branch_delay_slots,forwarding,branch_prediction) {
 
   var stages = [];
   var executionStages = [];
@@ -13,7 +14,8 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
   float_registers = initializeRegisters(float_registers_amount);
   integer_registers = initializeRegisters(int_registers_amount);
 
-  forwarding_enabled = forwarding; 
+  forwarding_enabled = forwarding;
+  branch_prediction_taken = branch_prediction;
 
   var WB = createStage("WB",null,wbOperation);
   stages.push(WB);
@@ -68,7 +70,7 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
     fetchingStages.push(IF);
   }
 
-  return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:brach_delay_slots};
+  return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:branch_delay_slots};
 };
 
 function createStage(name,next_stage,stage_operation) {
@@ -89,35 +91,44 @@ function initializeRegisters(amount_of_registers) {
 }
 
 function wbOperation(instruction) {
-  var register_array;
-  if (instruction.reg == "int") {
-    register_array = integer_registers;
-  } else {
-    register_array = float_registers;
+
+  if (instruction.exception != null && instruction.exception == true) {
+    handleException(instruction);
   }
-  if (instruction.op_result != null) {
-    register_array[instruction.rs].value = instruction.op_result;
-    register_array[instruction.rs].temp_value = null;
-  }
-  if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
-    //R type instructions
-    if (instruction.op == "SW" || instruction.op == "SW.S") {
-      freeRegisterAfterReading(register_array[instruction.rt]);
-      freeRegisterAfterReading(register_array[instruction.rs]);
+
+  try {
+
+    var register_array;
+    if (instruction.reg == "int") {
+      register_array = integer_registers;
     } else {
-      if (! forwarding_enabled) {
-        freeRegisterAfterWriting(register_array[instruction.rs]);
-      }
-      freeRegisterAfterReading(register_array[instruction.rt]);
-      if (instruction.rd != null) {
-        freeRegisterAfterReading(register_array[instruction.rd]);
-      }
+      register_array = float_registers;
     }
+    if (instruction.op_result != null) {
+      register_array[instruction.rs].value = instruction.op_result;
+      register_array[instruction.rs].temp_value = null;
+    }
+    if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
+      //R type instructions
+      if (instruction.op == "SW" || instruction.op == "SW.S") {
+        freeRegisterAfterReading(register_array[instruction.rt]);
+        freeRegisterAfterReading(register_array[instruction.rs]);
+      } else {
+        if (! forwarding_enabled) {
+          freeRegisterAfterWriting(register_array[instruction.rs]);
+        }
+        freeRegisterAfterReading(register_array[instruction.rt]);
+        if (instruction.rd != null) {
+          freeRegisterAfterReading(register_array[instruction.rd]);
+        }
+      }
 
+    }
+  } catch (e) {
+    handleException(instruction);
   }
-  return true;
 
-  //TODO:Exceptions
+  return true;
 }
 
 function memOperation(instruction) {
@@ -125,7 +136,7 @@ function memOperation(instruction) {
     if (instruction.op == "LW") {
       var value = read_int(memory,instruction.mem_addr);
       if (value == null) {
-        return false;
+        throw "Value could not be read.";
       }
       instruction.op_result = value;
       if (forwarding_enabled) {
@@ -137,7 +148,7 @@ function memOperation(instruction) {
     if (instruction.op == "LW.S") {
       var value = read_float(memory,instruction.mem_addr);
       if (value == null) {
-        return false;
+        throw "Value could not be read.";
       }
       instruction.op_result = value;
       if (forwarding_enabled) {
@@ -230,41 +241,57 @@ function exOperation(instruction) {
     case "BEQ":
       if (value3 == value1) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BNE":
       if (value3 != value1) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BEQZ":
       if (value3 == 0) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BNEZ":
       if (value3 != 0) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BEQ.S":
       if (value3float == value1float) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BNE.S":
       if (value3float != value1float) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BEQZ.S":
       if (value3float == 0) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "BNEZ.S":
       if (value3float != 0) {
         doTakeBranch(instruction);
+      } else {
+        doNotTakeBranch(instruction);
       }
       break;
     case "J":
@@ -441,6 +468,15 @@ function idOperation(instruction) {
     }
   } else {
     if(instruction.op == "BEQ" || instruction.op == "BEQZ" || instruction.op == "BEQ.S" || instruction.op == "BEQZ.S" || instruction.op == "BNE" || instruction.op == "BNEZ" || instruction.op == "BNE.S" || instruction.op == "BNEZ.S" || instruction.op == "J"  ) {
+      if (branch_prediction_taken) {
+        instruction_counter = 0;
+        global_instructions.forEach(function(target) {
+          if (target.marker != null && target.marker == instruction.label) { 
+            next_instruction = instruction_counter;
+          }
+          instruction_counter++;
+        });
+      }
       if (instruction.rs != null) { 
         if (reserveRegisterForReading(register_array[instruction.rs],instruction.cycle_started)) { 
           if (instruction.rt != null) {
@@ -483,18 +519,52 @@ function idOperation(instruction) {
 }
 
 function doTakeBranch(instruction){
-  instruction_counter = 0;
-  global_instructions.forEach(function(target) {
-    if (target.marker != null && target.marker == instruction.label) { 
-      next_instruction = instruction_counter;
-    }
-    instruction_counter++;
-  });
-
-  if (global_pipeline.brach_delay_slots != true) {
-    global_pipeline.fetching_stages.forEach(function(fetching_stage) {
-      fetching_stage.instruction = null;
-      fetching_stage.next_stage.instruction = null;
+  if (!branch_prediction_taken) {
+    instruction_counter = 0;
+    global_instructions.forEach(function(target) {
+      if (target.marker != null && target.marker == instruction.label) { 
+        next_instruction = instruction_counter;
+      }
+      instruction_counter++;
     });
+
+    if (global_pipeline.branch_delay_slots != true) {
+      global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+        fetching_stage.instruction = null;
+        fetching_stage.next_stage.instruction = null;
+      });
+    }
+  } else {
+    if (global_pipeline.branch_delay_slots != true) {
+      global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+          fetching_stage.next_stage.instruction = null;
+      });
+    }
   }
+  
+}
+
+function doNotTakeBranch(instruction){
+  if (branch_prediction_taken) {
+    global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+        fetching_stage.instruction = null;
+      });
+    if (global_pipeline.branch_delay_slots != true) {
+      global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+        fetching_stage.next_stage.instruction = null;
+      });
+    }
+  }
+  
+}
+
+function handleException(instruction) {
+  var first = true;
+  global_pipeline.execution_graph.forEach(function(stage) {
+    if (first) {
+      first = false;
+    } else {
+      stage.instruction = null;
+    }
+  });
 }

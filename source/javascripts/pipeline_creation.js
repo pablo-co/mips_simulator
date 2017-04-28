@@ -508,10 +508,10 @@ function idOperation(instruction) {
                 return false;
               }
             }
+          } else { // Second reservation not successful.
+            freeRegisterAfterWriting(register_array[instruction.rs]);
+            return false;
           }
-        } else { // Second reservation not successful.
-          freeRegisterAfterWriting(register_array[instruction.rs]);
-          return false;
         }
 
       } else {

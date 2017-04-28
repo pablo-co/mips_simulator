@@ -2,8 +2,9 @@ var float_registers;
 var integer_registers;
 var memory = build_memory(10000);
 var next_instruction = 0;
+var next_instruction_value_when_predicting_branch = 0;
 var forwarding_enabled = false;
-var branch_prediction_taken = false;
+var branch_prediction_taken = false; // 0 - No branch prediction, 1 - branch predict not taken, 2 - branch predict taken.
 
 function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,branch_delay_slots,forwarding,branch_prediction) {
 
@@ -470,6 +471,7 @@ function idOperation(instruction) {
     if(instruction.op == "BEQ" || instruction.op == "BEQZ" || instruction.op == "BEQ.S" || instruction.op == "BEQZ.S" || instruction.op == "BNE" || instruction.op == "BNEZ" || instruction.op == "BNE.S" || instruction.op == "BNEZ.S" || instruction.op == "J"  ) {
       if (branch_prediction_taken) {
         instruction_counter = 0;
+        next_instruction_value_when_predicting_branch = next_instruction;
         global_instructions.forEach(function(target) {
           if (target.marker != null && target.marker == instruction.label) { 
             next_instruction = instruction_counter;
@@ -519,7 +521,9 @@ function idOperation(instruction) {
 }
 
 function doTakeBranch(instruction){
-  if (!branch_prediction_taken) {
+
+  if (! branch_prediction_taken) {
+
     instruction_counter = 0;
     global_instructions.forEach(function(target) {
       if (target.marker != null && target.marker == instruction.label) { 
@@ -528,9 +532,12 @@ function doTakeBranch(instruction){
       instruction_counter++;
     });
 
+    global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+        fetching_stage.instruction = null;
+      });
+
     if (global_pipeline.branch_delay_slots != true) {
       global_pipeline.fetching_stages.forEach(function(fetching_stage) {
-        fetching_stage.instruction = null;
         fetching_stage.next_stage.instruction = null;
       });
     }
@@ -546,12 +553,21 @@ function doTakeBranch(instruction){
 
 function doNotTakeBranch(instruction){
   if (branch_prediction_taken) {
+    
+    next_instruction = next_instruction_value_when_predicting_branch;
+
     global_pipeline.fetching_stages.forEach(function(fetching_stage) {
         fetching_stage.instruction = null;
       });
     if (global_pipeline.branch_delay_slots != true) {
       global_pipeline.fetching_stages.forEach(function(fetching_stage) {
         fetching_stage.next_stage.instruction = null;
+      });
+    }
+  } else {
+    if (global_pipeline.branch_delay_slots != true) {
+      global_pipeline.fetching_stages.forEach(function(fetching_stage) {
+          fetching_stage.next_stage.instruction = null;
       });
     }
   }

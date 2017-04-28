@@ -59,6 +59,8 @@ Instruction
     { return {type: "branch", reg: "float", op: op, rs: rs, label: label, text: text()}; }
   / op:JumpOperation _ label:Label _
     { return {type: "jump", label: label, text: text()}; }
+  / op:"NOOP" 
+    { return {type: "noop", op: op, text: text() }; }
 
 Register
   = IntRegister / FloatRegister

@@ -298,6 +298,8 @@ function exOperation(instruction) {
     case "J":
       doTakeBranch(instruction);
       break;
+    case "NOOP":
+      break;
     default:
       throw "Unimplemented operation";
       break;

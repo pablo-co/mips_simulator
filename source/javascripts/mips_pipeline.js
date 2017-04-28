@@ -22,7 +22,7 @@ function callParser() {
     return;
   }
   global_instructions = instruction_set;
-  global_pipeline = createPipeline(1,32,32,false); 
+  global_pipeline = createPipeline(1,32,32,false,false); 
   instructionsHistory = [];
   for (var i = 0; i < instruction_set.length; ++i) {
     instructionsHistory.push([]);

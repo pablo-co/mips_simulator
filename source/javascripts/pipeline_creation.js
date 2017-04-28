@@ -2,8 +2,9 @@ var float_registers;
 var integer_registers;
 var memory = build_memory(10000);
 var next_instruction = 0;
+var forwarding_enabled = false;
 
-function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,brach_delay_slots) {
+function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,brach_delay_slots,forwarding) {
 
   var stages = [];
   var executionStages = [];
@@ -11,6 +12,8 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
 
   float_registers = initializeRegisters(float_registers_amount);
   integer_registers = initializeRegisters(int_registers_amount);
+
+  forwarding_enabled = forwarding; 
 
   var WB = createStage("WB",null,wbOperation);
   stages.push(WB);
@@ -80,7 +83,7 @@ function createStage(name,next_stage,stage_operation) {
 function initializeRegisters(amount_of_registers) {
   var registers = [];
   for (i = 0; i < amount_of_registers; i ++) {
-    registers.push({value:0,available_for_reading:true,amount_reading:0,available_for_writing:true})
+    registers.push({value:0,temp_value:null,available_for_reading:true,amount_reading:0,available_for_writing:true,waiting_for_lock:[]})
   }
   return registers;
 }
@@ -94,14 +97,17 @@ function wbOperation(instruction) {
   }
   if (instruction.op_result != null) {
     register_array[instruction.rs].value = instruction.op_result;
+    register_array[instruction.rs].temp_value = null;
   }
   if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
     //R type instructions
     if (instruction.op == "SW" || instruction.op == "SW.S") {
-      freeRegisterAfterWriting(register_array[instruction.rt]);
+      freeRegisterAfterReading(register_array[instruction.rt]);
       freeRegisterAfterReading(register_array[instruction.rs]);
     } else {
-      freeRegisterAfterWriting(register_array[instruction.rs]);
+      if (! forwarding_enabled) {
+        freeRegisterAfterWriting(register_array[instruction.rs]);
+      }
       freeRegisterAfterReading(register_array[instruction.rt]);
       if (instruction.rd != null) {
         freeRegisterAfterReading(register_array[instruction.rd]);
@@ -121,7 +127,11 @@ function memOperation(instruction) {
       if (value == null) {
         return false;
       }
-      integer_registers[instruction.rs].value = value;
+      instruction.op_result = value;
+      if (forwarding_enabled) {
+        integer_registers[instruction.rs].temp_value = instruction.op_result;
+        freeRegisterAfterWriting(integer_registers[instruction.rs]);
+      }
       return true;
     }
     if (instruction.op == "LW.S") {
@@ -129,79 +139,131 @@ function memOperation(instruction) {
       if (value == null) {
         return false;
       }
-      float_registers[instruction.rs].value = value;
+      instruction.op_result = value;
+      if (forwarding_enabled) {
+        float_registers[instruction.rs].temp_value = instruction.op_result;
+        freeRegisterAfterWriting(float_registers[instruction.rs]);
+      }
       return true;
     }
+    var value;
     if (instruction.op == "SW") {
-      return write_int(memory,instruction.mem_addr,integer_registers[instruction.rs].value);
+      if (integer_registers[instruction.rs].temp_value != null) {
+        value = integer_registers[instruction.rs].temp_value;
+      } else {
+        value = integer_registers[instruction.rs].value;
+      } 
+      return write_int(memory,instruction.mem_addr,value);
     }
     if (instruction.op == "SW.S") {
-      return write_float(memory,instruction.mem_addr,float_registers[instruction.rs].value);
+      if (float_registers[instruction.rs].temp_value != null) {
+        value = float_registers[instruction.rs].temp_value;
+      } else {
+        value = float_registers[instruction.rs].value;
+      } 
+      return write_float(memory,instruction.mem_addr,value);
     }
   }
   return true;
 }
 
 function exOperation(instruction) {
+
+  var value1, value2, value3, value1float, value3float;
+  if (instruction.rt != null && integer_registers[instruction.rt] != null) {
+   if (integer_registers[instruction.rt].temp_value != null) {
+      value1 = integer_registers[instruction.rt].temp_value;
+    } else {
+      value1 = integer_registers[instruction.rt].value;
+    } 
+  }
+  if (instruction.rd != null && integer_registers[instruction.rd] != null){
+    if (integer_registers[instruction.rd].temp_value != null) {
+      value2 = integer_registers[instruction.rd].temp_value;
+    } else {
+      value2 = integer_registers[instruction.rd].value;
+    }
+  }
+  if (instruction.rs != null && integer_registers[instruction.rs] != null){
+    if (integer_registers[instruction.rs].temp_value != null) {
+      value3 = integer_registers[instruction.rs].temp_value;
+    } else {
+      value3 = integer_registers[instruction.rs].value;
+    }
+  }
+  if (instruction.rt != null && float_registers[instruction.rt] != null) {
+    if (float_registers[instruction.rt].temp_value != null) {
+      value1float = float_registers[instruction.rt].temp_value;
+    } else {
+      value1float = float_registers[instruction.rt].value;
+    } 
+  }
+  if (instruction.rs != null && float_registers[instruction.rs] != null){
+    if (float_registers[instruction.rs].temp_value != null) {
+      value3 = float_registers[instruction.rs].temp_value;
+    } else {
+      value3 = float_registers[instruction.rs].value;
+    }
+  }
   switch(instruction.op) {
     case "ADD":
-      instruction.op_result = integer_registers[instruction.rt].value + integer_registers[instruction.rd].value; 
+      instruction.op_result = value1 + value2; 
       break;
     case "SUB":
-      instruction.op_result = integer_registers[instruction.rt].value - integer_registers[instruction.rd].value; 
+      instruction.op_result = value1 - value2; 
       break;
     case "SUB":
-      instruction.op_result = integer_registers[instruction.rt].value - integer_registers[instruction.rd].value; 
+      instruction.op_result = value1 - value2; 
       break;
     case "ADDI":
-      instruction.op_result = integer_registers[instruction.rt].value + instruction.im; 
+      instruction.op_result = value1 + instruction.im; 
       break;
     case "SUBI":
-      instruction.op_result = integer_registers[instruction.rt].value - instruction.im; 
+      instruction.op_result = value1 - instruction.im; 
       break;
     case "LW":
     case "SW":
     case "LW.S":
     case "SW.S":
-      instruction.mem_addr = integer_registers[instruction.rt].value + instruction.im;
+      instruction.mem_addr = value1 + instruction.im;
       break;
     case "BEQ":
-      if (integer_registers[instruction.rs].value == integer_registers[instruction.rt].value) {
+      if (value3 == value1) {
         doTakeBranch(instruction);
       }
       break;
     case "BNE":
-      if (integer_registers[instruction.rs].value != integer_registers[instruction.rt].value) {
+      if (value3 != value1) {
         doTakeBranch(instruction);
       }
       break;
     case "BEQZ":
-      if (integer_registers[instruction.rs].value == 0) {
+      if (value3 == 0) {
         doTakeBranch(instruction);
       }
       break;
     case "BNEZ":
-      if (integer_registers[instruction.rs].value != 0) {
+      if (value3 != 0) {
         doTakeBranch(instruction);
       }
       break;
     case "BEQ.S":
-      if (float_registers[instruction.rs].value == float_registers[instruction.rt].value) {
+      if (value3float == value1float) {
         doTakeBranch(instruction);
       }
       break;
     case "BNE.S":
-      if (float_registers[instruction.rs].value != float_registers[instruction.rt].value) {
+      if (value3float != value1float) {
         doTakeBranch(instruction);
       }
       break;
     case "BEQZ.S":
-      if (float_registers[instruction.rs].value == 0) {
+      if (value3float == 0) {
         doTakeBranch(instruction);
       }
       break;
     case "BNEZ.S":
-      if (float_registers[instruction.rs].value != 0) {
+      if (value3float != 0) {
         doTakeBranch(instruction);
       }
       break;
@@ -212,69 +274,146 @@ function exOperation(instruction) {
       throw "Unimplemented operation";
       break;
   }
+  if (forwarding_enabled && instruction.op_result != null) {
+    integer_registers[instruction.rs].temp_value = instruction.op_result;
+    if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
+      //R type instructions
+      if ( ! (instruction.op == "SW" || instruction.op == "SW.S")) {
+          freeRegisterAfterWriting(integer_registers[instruction.rs]);
+      }
+    }
+  }
+  
   return true;
 }
 
 function fpOperation(instruction) {
+
+  var value1, value2;
+  if (instruction.rt != null && float_registers[instruction.rt] != null) {
+   if (float_registers[instruction.rt].temp_value != null) {
+      value1 = float_registers[instruction.rt].temp_value;
+    } else {
+      value1 = float_registers[instruction.rt].value;
+    } 
+  }
+  if (instruction.rd != null && float_registers[instruction.rd] != null){
+    if (float_registers[instruction.rd].temp_value != null) {
+      value2 = float_registers[instruction.rd].temp_value;
+    } else {
+      value2 = float_registers[instruction.rd].value;
+    }
+  }
   switch(instruction.op) {
     case "ADD.S":
-      instruction.op_result = float_registers[instruction.rt].value + float_registers[instruction.rd].value; 
+      instruction.op_result = value1 + value2; 
       break;
     case "SUB.S":
-      instruction.op_result = float_registers[instruction.rt].value - float_registers[instruction.rd].value; 
+      instruction.op_result = value1 - value2; 
       break;
     case "ADDI.S":
-      instruction.op_result = float_registers[instruction.rt].value + instruction.im; 
+      instruction.op_result = value1 + instruction.im; 
       break;
     case "SUBI.S":
-      instruction.op_result = float_registers[instruction.rt].value - instruction.im; 
+      instruction.op_result = value1 - instruction.im; 
       break;
     default:
       throw "Unimplemented operation";
       break;
   }
+
+  if (forwarding_enabled && instruction.op_result != null) {
+    float_registers[instruction.rs].temp_value = instruction.op_result;
+    freeRegisterAfterWriting(float_registers[instruction.rs]);
+  }
+
   return true;
 }
 
 function multOperation(instruction) {
+  
+  var value1, value2;
+  if (instruction.rt != null && integer_registers[instruction.rt] != null) {
+   if (integer_registers[instruction.rt].temp_value != null) {
+      value1 = integer_registers[instruction.rt].temp_value;
+    } else {
+      value1 = integer_registers[instruction.rt].value;
+    } 
+  }
+  if (instruction.rd != null && integer_registers[instruction.rd] != null){
+    if (integer_registers[instruction.rd].temp_value != null) {
+      value2 = integer_registers[instruction.rd].temp_value;
+    } else {
+      value2 = integer_registers[instruction.rd].value;
+    }
+  }
+
   switch(instruction.op) {
     case "MULT":
-      instruction.op_result = integer_registers[instruction.rt].value * integer_registers[instruction.rd].value; 
+      instruction.op_result = value1 * value2; 
       break;
     case "DIV":
-      instruction.op_result = Math.floor(integer_registers[instruction.rt].value / integer_registers[instruction.rd].value); 
+      instruction.op_result = Math.floor(value1 / value2); 
       break;
     case "MULTI":
-      instruction.op_result = integer_registers[instruction.rt].value * instruction.im; 
+      instruction.op_result = value1 * instruction.im; 
       break;
     case "DIVI":
-      instruction.op_result = Math.floor(integer_registers[instruction.rt].value / instruction.im); 
+      instruction.op_result = Math.floor(value1 / instruction.im); 
       break;
     default:
       throw "Unimplemented operation";
       break;
   }
   return true;
+
+  if (forwarding_enabled && instruction.op_result != null) {
+    integer_registers[instruction.rs].temp_value = instruction.op_result;
+    freeRegisterAfterWriting(integer_registers[instruction.rs]);
+  }
 }
 
 function fpmultOperation(instruction) {
+
+ var value1, value2;
+  if (instruction.rt != null && float_registers[instruction.rt] != null) {
+   if (float_registers[instruction.rt].temp_value != null) {
+      value1 = float_registers[instruction.rt].temp_value;
+    } else {
+      value1 = float_registers[instruction.rt].value;
+    } 
+  }
+  if (instruction.rd != null && float_registers[instruction.rd] != null){
+    if (float_registers[instruction.rd].temp_value != null) {
+      value2 = float_registers[instruction.rd].temp_value;
+    } else {
+      value2 = float_registers[instruction.rd].value;
+    }
+  }
+
   switch(instruction.op) {
     case "MULT.S":
-      instruction.op_result = float_registers[instruction.rt].value * float_registers[instruction.rd].value; 
+      instruction.op_result = value1 * value2; 
       break;
     case "DIV.S":
-      instruction.op_result = Math.floor(float_registers[instruction.rt].value / float_registers[instruction.rd].value); 
+      instruction.op_result = Math.floor(value1 / value2); 
       break;
     case "MULTI.S":
-      instruction.op_result = float_registers[instruction.rt].value * instruction.im; 
+      instruction.op_result = value1 * instruction.im; 
       break;
     case "DIVI.S":
-      instruction.op_result = Math.floor(float_registers[instruction.rt].value / instruction.im); 
+      instruction.op_result = Math.floor(value1 / instruction.im); 
       break;
     default:
       throw "Unimplemented operation";
       break;
   }
+
+  if (forwarding_enabled && instruction.op_result != null) {
+    float_registers[instruction.rs].temp_value = instruction.op_result;
+    freeRegisterAfterWriting(float_registers[instruction.rs]);
+  }
+
   return true;
 }
 
@@ -290,34 +429,56 @@ function idOperation(instruction) {
     register_array[instruction.rs].value = instruction.op_result;
   }
   if (instruction.op == "SW" || instruction.op == "SW.S") {
-    if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started))
+    if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) {
       if (reserveRegisterForReading(register_array[instruction.rs],instruction.cycle_started)) {
         return true;
       } else {
         freeRegisterAfterReading(register_array[instruction.rt]);
         return false;
       }
+    } else {
+      return false;
+    }
   } else {
-    if (reserveRegisterForWriting(register_array[instruction.rs],instruction.cycle_started)) { // First reservation successful
-      if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) { // second reservation successful
-        if (instruction.rd != null) { // Third reservation necessary
-          if (reserveRegisterForReading(register_array[instruction.rd],instruction.cycle_started)) { // Third reservation successful
-            return true;
-          } else { // Third reservation not successful
-            freeRegisterAfterReading(register_array[instruction.rt]);
-            freeRegisterAfterWriting(register_array[instruction.rs]);
-            return false;
+    if(instruction.op == "BEQ" || instruction.op == "BEQZ" || instruction.op == "BEQ.S" || instruction.op == "BEQZ.S" || instruction.op == "BNE" || instruction.op == "BNEZ" || instruction.op == "BNE.S" || instruction.op == "BNEZ.S" || instruction.op == "J"  ) {
+      if (instruction.rs != null) { 
+        if (reserveRegisterForReading(register_array[instruction.rs],instruction.cycle_started)) { 
+          if (instruction.rt != null) {
+            if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) { 
+              return true;
+            } else {
+              freeRegisterAfterReading(register_array[instruction.rs]);
+              return false;
+            }
           }
+        } else {
+          return false;
         }
-      } else { // Second reservation not successful.
-        freeRegisterAfterWriting(register_array[instruction.rs]);
+      }
+    } else {
+      if (reserveRegisterForWriting(register_array[instruction.rs],instruction.cycle_started)) { // First reservation successful
+        if (instruction.rt != null) {
+          if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) { // second reservation successful
+            if (instruction.rd != null) { // Third reservation necessary
+              if (reserveRegisterForReading(register_array[instruction.rd],instruction.cycle_started)) { // Third reservation successful
+                return true;
+              } else { // Third reservation not successful
+                freeRegisterAfterReading(register_array[instruction.rt]);
+                freeRegisterAfterWriting(register_array[instruction.rs]);
+                return false;
+              }
+            }
+          }
+        } else { // Second reservation not successful.
+          freeRegisterAfterWriting(register_array[instruction.rs]);
+          return false;
+        }
+
+      } else {
         return false;
       }
-
     }
   }
-
-  //TODO:Check for structural hazards.
   return true;
 }
 

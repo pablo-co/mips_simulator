@@ -13,6 +13,8 @@ function drawExecution() {
 }
 
 function drawCode() {
+  ++currentPlayedCycle;
+  $("#cycle").html(currentPlayedCycle);
   var content = {lines:[]};
   for (var i = 0; i < global_instructions.length; ++i) {
     var line = global_instructions[i];
@@ -72,7 +74,10 @@ function currentStage(line) {
 function drawInt() {
   var state = [];
   for (var i = 0; i < integer_registers.length; ++i) {
-    state.push({value: integer_registers[i].value, addr: i});
+    value = integer_registers[i].value;
+    if (value != 0) {
+      state.push({value: integer_registers[i].value, addr: i});
+    }
   }
   var html = window.templates["memory-template"]({title: "INT", mem: state});
   $("#int-register-file").html(html);
@@ -81,13 +86,23 @@ function drawInt() {
 function drawFloat() {
   var state = [];
   for (var i = 0; i < float_registers.length; ++i) {
-    state.push({value: float_registers[i].value, addr: i});
+    value = float_registers[i].value;
+    if (value != 0) {
+      state.push({value: value, addr: i});
+    }
   }
   var html = window.templates["memory-template"]({title: "FLOAT", mem: state});
   $("#float-register-file").html(html);
 }
 
 function drawMem() {
-  var html = window.templates["memory-template"]({title: "MEM", mem:[{addr: 0, value: 1}]});
+  var state = [];
+  for (var i = 0; i < memorySize; i += 4) {
+    var value = read_int(memory, i);
+    if (value != 0) {
+      state.push({value: value, addr: i});
+    }
+  }
+  var html = window.templates["memory-template"]({title: "MEM", mem: state});
   $("#memory-file").html(html);
 }

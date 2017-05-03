@@ -1,6 +1,7 @@
 var float_registers;
 var integer_registers;
-var memory = build_memory(10000);
+var memory = build_memory(400);
+var memorySize = 100;
 var next_instruction = 0;
 var next_instruction_value_when_predicting_branch = 0;
 var forwarding_enabled = false;

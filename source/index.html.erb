@@ -6,8 +6,6 @@
   <%= javascript_include_tag "http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-latest.js" %>==
 <% end %>
 
-
-<textarea id="parse_result_area"></textarea>
 <%= partial "code_runtime" %>
 <%= partial "memory" %>
 
@@ -16,7 +14,10 @@
     <a id="code-link" href="#code" aria-controls="code" role="tab" data-toggle="tab">Code</a>
   </li>
   <li role="presentation">
-    <a id="runtime-link" href="#runtime" aria-controls="runtime" role="tab" data-toggle="tab">Runtime</a>
+    <a id="runtime-link" href="#runtime" aria-controls="runtime" role="tab" data-toggle="tab">
+      Runtime
+      <span class="badge" id="cycle"></span>
+    </a>
   </li>
 </ul>
 
@@ -41,16 +42,19 @@ BEQZ R4, LOOP</div>
           </div>
         </div>
       </div>
-      <div class="panel-footer" id="code-errors"></div>
+      <div class="panel-footer" id="code-footer">
+        <div class="alert alert-danger" role="alert">
+          <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+          <span class="sr-only">Error:</span>
+          <span id="code-errors"></span>
+        </div>
+      </div>
     </div>
   </div>
   <div role="tabpanel" class="tab-pane" id="runtime">
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="btn-group" role="group" aria-label="...">
-          <button type="button" class="btn btn-default">
-            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
-          </button>
           <button id="play" type="button" class="btn btn-default">
             <span class="glyphicon glyphicon-play" aria-hidden="true" onClick="play();"></span>
           </button>

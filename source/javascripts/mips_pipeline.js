@@ -1,18 +1,22 @@
 var global_pipeline;
 var global_instructions;
 var instructionsHistory;
+var currentPlayedCycle;
 var automaticExec;
+var lastPlayValue = 1;
 
 function callParser() {
   var editor = ace.edit("editor");
-  $("#parse_result_area")[0].value = "";
-  $("#code-errors").html("");
   var instruction_set;
+
+  $("#code-footer").hide();
+  $("#code-errors").html("");
   $("#parse_button")[0].disabled = true;
+
   try {
     instruction_set = parser_instance.parse(editor.getValue());
   } catch(err) {
-    printError(err);
+    printError(err.name + " in line " + err.location.start.line +  ": " + err.message);
     return;
   }
 
@@ -28,26 +32,52 @@ function callParser() {
     instructionsHistory.push([]);
   }
 
+  currentPlayedCycle = 0;
+  $("#runtime-link").show();
   $("#runtime-link").tab("show");
+  $("#code-link").hide();
+  drawExecution();
+}
 
-  return instruction_set;
+function next() {
+  $("#runtime-execution").show();
+  callNextClockCycle();
 }
 
 function play() {
-  automaticExec = setInterval(callNextClockCycle, 1000);
+  var value = window.playSpeed.slider("getValue");
+  automaticExec = setInterval(callNextClockCycle, value * 1000);
+  $("#speedSlider").show();
+  $("#runtime-execution").show();
   $("#play").hide();
   $("#pause").show();
 }
 
 function pause() {
   clearInterval(automaticExec);
+  $("#speedSlider").hide();
   $("#play").show();
   $("#pause").hide();
 }
 
+function stop() {
+  pause();
+  resetState();
+  $("#speedSlider").hide();
+  $("#code-link").show();
+  $("#code-link").tab("show");
+  $("#runtime-link").hide();
+  $("#parse_button")[0].disabled = false;
+}
+
 function callNextClockCycle() {
+  var value = window.playSpeed.slider("getValue");
+  if (value != lastPlayValue) {
+    lastPlayValue = value;
+    clearInterval(automaticExec);
+    automaticExec = setInterval(callNextClockCycle, value * 1000);
+  }
   nextClockCycle(global_pipeline,global_instructions);
-  $("#parse_result_area")[0].value = current_clock_cycle;
 }
 
 function obtainNonexistentLabels(instruction_set) {
@@ -71,4 +101,5 @@ function obtainNonexistentLabels(instruction_set) {
 
 function printError(error_string){
   $("#code-errors").html(error_string);
+  $("#code-footer").show();
 }

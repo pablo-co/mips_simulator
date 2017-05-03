@@ -66,8 +66,7 @@ Register
   = IntRegister / FloatRegister
 
 IntOperation
-  = "ADD" / "SUB" / "DIV" / "MULT" { return text(); }
-
+  = "ADD" / "SUB" / "DIV" / "MULT" { return text(); } 
 IntImOperation
   = "ADDI" / "SUBI" / "DIVI" / "MULTI" { return text(); }
 

@@ -13,13 +13,22 @@ function drawExecution() {
 }
 
 function drawCode() {
+  $("#cycle").html(current_clock_cycle);
   var content = {lines:[]};
   for (var i = 0; i < global_instructions.length; ++i) {
     var line = global_instructions[i];
     var active = line.cycle_started == current_clock_cycle;
     var stage = currentStage(line);
     updateHistory(line.num, stage);
-    content.lines.push({body: line.text, active: active, stages: getHistory(line.num)});
+    var stages = getHistory(line.num);
+    var stalled = stages[0] && stages[0].name === "STALL";
+    content.lines.push({
+      body: line.text,
+      active: active,
+      stages: stages,
+      exception: line.exception,
+      stalled: stalled
+    });
   }
   var html = window.templates["code-runtime-template"](content);
   $("#runtime-container").html(html);
@@ -42,6 +51,8 @@ function getHistory(num) {
     stages.unshift(null);
   }
 
+  console.log(stages);
+
   return stages;
 }
 
@@ -51,8 +62,8 @@ function updateHistory(num, stage) {
   }
 
   var len = instructionsHistory[num].length;
-  if (instructionsHistory[num][len - 1] == stage) {
-    instructionsHistory[num].push({cycle: current_clock_cycle, name: "Stall"});
+  if (instructionsHistory[num][len - 1] && instructionsHistory[num][len - 1].name == stage) {
+    instructionsHistory[num].push({cycle: current_clock_cycle, name: "STALL"});
   } else {
     instructionsHistory[num].push({cycle: current_clock_cycle, name: stage});
   }
@@ -72,7 +83,10 @@ function currentStage(line) {
 function drawInt() {
   var state = [];
   for (var i = 0; i < integer_registers.length; ++i) {
-    state.push({value: integer_registers[i].value, addr: i});
+    value = integer_registers[i].value;
+    if (value != 0) {
+      state.push({value: integer_registers[i].value, addr: i});
+    }
   }
   var html = window.templates["memory-template"]({title: "INT", mem: state});
   $("#int-register-file").html(html);
@@ -81,13 +95,23 @@ function drawInt() {
 function drawFloat() {
   var state = [];
   for (var i = 0; i < float_registers.length; ++i) {
-    state.push({value: float_registers[i].value, addr: i});
+    value = float_registers[i].value;
+    if (value != 0) {
+      state.push({value: value, addr: i});
+    }
   }
   var html = window.templates["memory-template"]({title: "FLOAT", mem: state});
   $("#float-register-file").html(html);
 }
 
 function drawMem() {
-  var html = window.templates["memory-template"]({title: "MEM", mem:[{addr: 0, value: 1}]});
+  var state = [];
+  for (var i = 0; i < memorySize; i += 4) {
+    var value = read_int(memory, i);
+    if (value != 0) {
+      state.push({value: value, addr: i});
+    }
+  }
+  var html = window.templates["memory-template"]({title: "MEM", mem: state});
   $("#memory-file").html(html);
 }

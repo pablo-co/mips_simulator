@@ -1,6 +1,7 @@
 .badge {
   position: relative;
-  width: 3.5em;
+  width: 5.6em;
+  font-size: 0.8em;
 
   &.empty {
     opacity: 0;
@@ -30,4 +31,8 @@
 
 .list-group-item.active .cycle {
   color: white;
+}
+
+.slider {
+  margin-left: 3em;
 }

@@ -1,6 +1,7 @@
 var float_registers;
 var integer_registers;
-var memory = build_memory(10000);
+var memory = build_memory(400);
+var memorySize = 100;
 var next_instruction = 0;
 var next_instruction_value_when_predicting_branch = 0;
 var forwarding_enabled = false;
@@ -74,6 +75,24 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
   return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:branch_delay_slots};
 };
 
+function resetState() {
+  memory = build_memory(400);
+  memorySize = 100;
+  next_instruction = 0;
+  next_instruction_value_when_predicting_branch = 0;
+  forwarding_enabled = false;
+  branch_prediction_taken = false;
+  current_clock_cycle = 0
+  previous_clock_cycles = []
+  callParser();
+  global_pipeline = null;
+  global_instructions = null;
+  instructionsHistory = null;
+  automaticExec = null;
+  lastPlayValue = 1;
+  $("#cycle").html("");
+}
+
 function createStage(name,next_stage,stage_operation) {
   return {
     name: name,
@@ -93,40 +112,39 @@ function initializeRegisters(amount_of_registers) {
 
 function wbOperation(instruction) {
 
-  if (instruction.exception != null && instruction.exception == true) {
+  if (instruction.exception) {
     handleException(instruction);
-  }
-
-  try {
-
-    var register_array;
-    if (instruction.reg == "int") {
-      register_array = integer_registers;
-    } else {
-      register_array = float_registers;
-    }
-    if (instruction.op_result != null) {
-      register_array[instruction.rs].value = instruction.op_result;
-      register_array[instruction.rs].temp_value = null;
-    }
-    if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
-      //R type instructions
-      if (instruction.op == "SW" || instruction.op == "SW.S") {
-        freeRegisterAfterReading(register_array[instruction.rt]);
-        freeRegisterAfterReading(register_array[instruction.rs]);
+  } else {
+    try {
+      var register_array;
+      if (instruction.reg == "int") {
+        register_array = integer_registers;
       } else {
-        if (! forwarding_enabled) {
-          freeRegisterAfterWriting(register_array[instruction.rs]);
-        }
-        freeRegisterAfterReading(register_array[instruction.rt]);
-        if (instruction.rd != null) {
-          freeRegisterAfterReading(register_array[instruction.rd]);
-        }
+        register_array = float_registers;
       }
+      if (instruction.op_result != null) {
+        register_array[instruction.rs].value = instruction.op_result;
+        register_array[instruction.rs].temp_value = null;
+      }
+      if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
+        //R type instructions
+        if (instruction.op == "SW" || instruction.op == "SW.S") {
+          freeRegisterAfterReading(register_array[instruction.rt]);
+          freeRegisterAfterReading(register_array[instruction.rs]);
+        } else {
+          if (! forwarding_enabled) {
+            freeRegisterAfterWriting(register_array[instruction.rs]);
+          }
+          freeRegisterAfterReading(register_array[instruction.rt]);
+          if (instruction.rd != null) {
+            freeRegisterAfterReading(register_array[instruction.rd]);
+          }
+        }
 
+      }
+    } catch (e) {
+      handleException(instruction);
     }
-  } catch (e) {
-    handleException(instruction);
   }
 
   return true;
@@ -183,7 +201,7 @@ function exOperation(instruction) {
 
   var value1, value2, value3, value1float, value3float;
   if (instruction.rt != null && integer_registers[instruction.rt] != null) {
-   if (integer_registers[instruction.rt].temp_value != null) {
+    if (integer_registers[instruction.rt].temp_value != null) {
       value1 = integer_registers[instruction.rt].temp_value;
     } else {
       value1 = integer_registers[instruction.rt].value;
@@ -306,11 +324,11 @@ function exOperation(instruction) {
     if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
       //R type instructions
       if ( ! (instruction.op == "SW" || instruction.op == "SW.S")) {
-          freeRegisterAfterWriting(integer_registers[instruction.rs]);
+        freeRegisterAfterWriting(integer_registers[instruction.rs]);
       }
     }
   }
-  
+
   return true;
 }
 
@@ -318,7 +336,7 @@ function fpOperation(instruction) {
 
   var value1, value2;
   if (instruction.rt != null && float_registers[instruction.rt] != null) {
-   if (float_registers[instruction.rt].temp_value != null) {
+    if (float_registers[instruction.rt].temp_value != null) {
       value1 = float_registers[instruction.rt].temp_value;
     } else {
       value1 = float_registers[instruction.rt].value;
@@ -358,10 +376,9 @@ function fpOperation(instruction) {
 }
 
 function multOperation(instruction) {
-  
   var value1, value2;
   if (instruction.rt != null && integer_registers[instruction.rt] != null) {
-   if (integer_registers[instruction.rt].temp_value != null) {
+    if (integer_registers[instruction.rt].temp_value != null) {
       value1 = integer_registers[instruction.rt].temp_value;
     } else {
       value1 = integer_registers[instruction.rt].value;
@@ -392,6 +409,11 @@ function multOperation(instruction) {
       throw "Unimplemented operation";
       break;
   }
+
+  if (isNaN(instruction_op_result)) {
+    throw "Not a number";
+  }
+
   return true;
 
   if (forwarding_enabled && instruction.op_result != null) {
@@ -402,9 +424,9 @@ function multOperation(instruction) {
 
 function fpmultOperation(instruction) {
 
- var value1, value2;
+  var value1, value2;
   if (instruction.rt != null && float_registers[instruction.rt] != null) {
-   if (float_registers[instruction.rt].temp_value != null) {
+    if (float_registers[instruction.rt].temp_value != null) {
       value1 = float_registers[instruction.rt].temp_value;
     } else {
       value1 = float_registers[instruction.rt].value;
@@ -434,6 +456,10 @@ function fpmultOperation(instruction) {
     default:
       throw "Unimplemented operation";
       break;
+  }
+
+  if (isNaN(instruction_op_result)) {
+    throw "Not a number";
   }
 
   if (forwarding_enabled && instruction.op_result != null) {
@@ -532,8 +558,8 @@ function doTakeBranch(instruction){
     });
 
     global_pipeline.fetching_stages.forEach(function(fetching_stage) {
-        fetching_stage.instruction = null;
-      });
+      fetching_stage.instruction = null;
+    });
 
     if (global_pipeline.branch_delay_slots != true) {
       global_pipeline.fetching_stages.forEach(function(fetching_stage) {
@@ -543,21 +569,21 @@ function doTakeBranch(instruction){
   } else {
     if (global_pipeline.branch_delay_slots != true) {
       global_pipeline.fetching_stages.forEach(function(fetching_stage) {
-          fetching_stage.next_stage.instruction = null;
+        fetching_stage.next_stage.instruction = null;
       });
     }
   }
-  
+
 }
 
 function doNotTakeBranch(instruction){
   if (branch_prediction_taken) {
-    
+
     next_instruction = next_instruction_value_when_predicting_branch;
 
     global_pipeline.fetching_stages.forEach(function(fetching_stage) {
-        fetching_stage.instruction = null;
-      });
+      fetching_stage.instruction = null;
+    });
     if (global_pipeline.branch_delay_slots != true) {
       global_pipeline.fetching_stages.forEach(function(fetching_stage) {
         fetching_stage.next_stage.instruction = null;
@@ -566,11 +592,11 @@ function doNotTakeBranch(instruction){
   } else {
     if (global_pipeline.branch_delay_slots != true) {
       global_pipeline.fetching_stages.forEach(function(fetching_stage) {
-          fetching_stage.next_stage.instruction = null;
+        fetching_stage.next_stage.instruction = null;
       });
     }
   }
-  
+
 }
 
 function handleException(instruction) {
@@ -582,4 +608,6 @@ function handleException(instruction) {
       stage.instruction = null;
     }
   });
+
+  next_instruction = global_instructions.length;
 }

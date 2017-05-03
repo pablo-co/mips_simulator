@@ -1,10 +1,13 @@
+---
+---
+
 <% content_for :assets do %>
   <%= javascript_include_tag "https://github.com/pegjs/pegjs/releases/download/v0.10.0/peg-0.10.0.min.js" %>
-  <%= javascript_include_tag "http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-latest.js" %>==
+  <%= javascript_include_tag "http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-latest.js" %>
+  <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/bootstrap-slider.min.js" %>
+  <%= stylesheet_link_tag "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/css/bootstrap-slider.min.css" %>
 <% end %>
 
-
-<textarea id="parse_result_area"></textarea>
 <%= partial "code_runtime" %>
 <%= partial "memory" %>
 
@@ -13,7 +16,10 @@
     <a id="code-link" href="#code" aria-controls="code" role="tab" data-toggle="tab">Code</a>
   </li>
   <li role="presentation">
-    <a id="runtime-link" href="#runtime" aria-controls="runtime" role="tab" data-toggle="tab">Runtime</a>
+    <a id="runtime-link" href="#runtime" aria-controls="runtime" role="tab" data-toggle="tab">
+      Runtime
+      <span class="badge" id="cycle"></span>
+    </a>
   </li>
 </ul>
 
@@ -38,15 +44,21 @@ BEQZ R4, LOOP</div>
           </div>
         </div>
       </div>
-      <div class="panel-footer" id="code-errors"></div>
+      <div class="panel-footer" id="code-footer">
+        <div class="alert alert-danger" role="alert">
+          <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+          <span class="sr-only">Error:</span>
+          <span id="code-errors"></span>
+        </div>
+      </div>
     </div>
   </div>
   <div role="tabpanel" class="tab-pane" id="runtime">
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="btn-group" role="group" aria-label="...">
-          <button type="button" class="btn btn-default">
-            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+          <button id="stop" type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true" onClick="stop();"></span>
           </button>
           <button id="play" type="button" class="btn btn-default">
             <span class="glyphicon glyphicon-play" aria-hidden="true" onClick="play();"></span>
@@ -54,12 +66,13 @@ BEQZ R4, LOOP</div>
           <button id="pause" type="button" class="btn btn-default">
             <span class="glyphicon glyphicon-pause" aria-hidden="true" onClick="pause();"></span>
           </button>
-          <button type="button" class="btn btn-default" onClick="callNextClockCycle();">
+          <button type="button" class="btn btn-default" onClick="next()">
             <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
           </button>
         </div>
+        <input id="play-speed" data-slider-id="speedSlider" type="text" data-slider-min="0.1" data-slider-max="10" data-slider-step="0.1" data-slider-value="1"/>
       </div>
-      <div class="panel-body">
+      <div id="runtime-execution" class="panel-body">
         <div class="row">
           <div id="runtime-container" class="col-xs-12 col-md-6">
           </div>

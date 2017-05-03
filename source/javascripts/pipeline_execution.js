@@ -49,8 +49,7 @@ function performAllStageOperations(pipeline) {
     }
     try {
       stage.operation_performed = stage.stage_operation(stage.instruction);
-    }
-    catch (e) {
+    } catch (e) {
       stage.instruction.exception = true;
       stage.operation_performed = true; //So that the instruction continues until WB.
     }

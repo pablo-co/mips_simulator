@@ -6,12 +6,14 @@ var next_instruction = 0;
 var next_instruction_value_when_predicting_branch = 0;
 var forwarding_enabled = false;
 var branch_prediction_taken = false;
+var log = [];
 
 function createPipeline(superscaling_amount, int_registers_amount, float_registers_amount, branch_delay_slots, forwarding, branch_prediction, mem_size) {
 
   var stages = [];
   var executionStages = [];
   var fetchingStages = [];
+  var log = [];
 
   float_registers = initializeRegisters(float_registers_amount);
   integer_registers = initializeRegisters(int_registers_amount);
@@ -93,6 +95,7 @@ function resetState() {
   instructionsHistory = null;
   automaticExec = null;
   lastPlayValue = 1;
+  log = [];
   $("#cycle").html("");
 }
 
@@ -319,6 +322,19 @@ function exOperation(instruction) {
       break;
     case "NOOP":
       break;
+    case "PTR":
+      print(current_clock_cycle, "R" + instruction.rg, "[" + instruction.num + "] " + instruction.text, integer_registers[instruction.rg].value);
+      break;
+    case "PTR.S":
+      print(current_clock_cycle, "F" + instruction.rg, "[" + instruction.num + "] " + instruction.text, float_registers[instruction.rg].value);
+      break;
+    case "PTM":
+    case "PTM.S":
+      var value = integer_registers[instruction.rg].value;
+      var mem_value = read_int(memory, value);
+      if (instruction.read == "float") mem_value = read_float(memory, value);
+      print(current_clock_cycle, "MEM[" + value + "]", "[" + instruction.num + "]" + instruction.text, mem_value);
+      break;
     default:
       throw "Unimplemented operation";
       break;
@@ -485,6 +501,11 @@ function idOperation(instruction) {
   if (instruction.op_result != null) {
     register_array[instruction.rs].value = instruction.op_result;
   }
+
+  if (instruction.op == "NOOP" || instruction.op == "PTR" || instruction.op == "PTR.S" || instruction.op == "PTM" || instruction.op == "PTM.S") {
+    return true;
+  }
+
   if (instruction.op == "SW" || instruction.op == "SW.S") {
     if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) {
       if (reserveRegisterForReading(register_array[instruction.rs],instruction.cycle_started)) {
@@ -497,7 +518,7 @@ function idOperation(instruction) {
       return false;
     }
   } else {
-    if(instruction.op == "BEQ" || instruction.op == "BEQZ" || instruction.op == "BEQ.S" || instruction.op == "BEQZ.S" || instruction.op == "BNE" || instruction.op == "BNEZ" || instruction.op == "BNE.S" || instruction.op == "BNEZ.S" || instruction.op == "J"  ) {
+    if (instruction.op == "BEQ" || instruction.op == "BEQZ" || instruction.op == "BEQ.S" || instruction.op == "BEQZ.S" || instruction.op == "BNE" || instruction.op == "BNEZ" || instruction.op == "BNE.S" || instruction.op == "BNEZ.S" || instruction.op == "J"  ) {
       if (branch_prediction_taken) {
         instruction_counter = 0;
         next_instruction_value_when_predicting_branch = next_instruction;
@@ -614,4 +635,8 @@ function handleException(instruction) {
   });
 
   next_instruction = global_instructions.length;
+}
+
+function print(cycle, rg, num, value) {
+  log.push({cycle: cycle, register: rg, inst: num, value: value});
 }

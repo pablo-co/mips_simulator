@@ -10,6 +10,7 @@ function drawExecution() {
   drawInt();
   drawFloat();
   drawMem();
+  drawLog();
 }
 
 function drawCode() {
@@ -112,4 +113,10 @@ function drawMem() {
   }
   var html = window.templates["memory-template"]({title: "MEM", mem: state});
   $("#memory-file").html(html);
+}
+
+
+function drawLog() {
+  var html = window.templates["log-template"]({entries: log});
+  $("#log").html(html);
 }

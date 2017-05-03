@@ -10,6 +10,7 @@
 
 <%= partial "code_runtime" %>
 <%= partial "memory" %>
+<%= partial "log" %>
 
 <ul class="nav nav-tabs" role="tablist">
   <li role="presentation" class="active">
@@ -35,11 +36,18 @@
         <div class="tab editor-container">
           <div class="row">
             <div class="col-xs-12">
-              <div id="editor" class="editor">LOOP: LW R2, 0(R1)
-LW R3, 8(R1)
-ADD R4, R2, R3
-SW R4, 0(R1)
-BEQZ R4, LOOP</div>
+              <div id="editor" class="editor">ADDI R1, R1, 1
+ADDI R2, R2, 1
+SW R1, 0(R4)
+SW R2, 4(R4)
+LOOP:
+LW R1, 0(R4)
+LW R2, 4(R4)
+ADD R3, R1, R2
+SW R3, 8(R4)
+ADDI R4, R4, 4
+PTM R4
+BEQZ R0, LOOP</div>
             </div>
           </div>
           <div class="row">
@@ -90,7 +98,9 @@ BEQZ R4, LOOP</div>
             </div>
           </div>
         </div>
-        <div class="panel-footer"></div>
+        <div class="panel-footer">
+          <div id="log"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -162,7 +172,6 @@ BEQZ R4, LOOP</div>
             </div>
             <p>When branches are not predicted taken, execution continues as normal and the instructions are flushed if the branch had to be taken (see branch delay slot details). If branches are predicted taken, once it is determined that the instruction is a branch (ID) the next instruction that will be fetched is the one with the branch label, flushing it in case on EX stage it is determined the branch shouldn't be taken.</p>
           </div>
-
         </div>
       </div>
     </div>

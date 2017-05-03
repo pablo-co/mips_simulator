@@ -59,14 +59,24 @@ Instruction
     { return {type: "branch", reg: "float", op: op, rs: rs, label: label, text: text()}; }
   / op:JumpOperation _ label:Label _
     { return {type: "jump", label: label, text: text()}; }
-  / op:"NOOP" 
+  / op:"NOOP"
     { return {type: "noop", op: op, text: text() }; }
+  / op:"PTR" _ rg:IntRegister _
+    { return {type: "print", reg: "int", op: op, rg: rg, text: text() }; }
+  / op:"PTR.S" _ rg:FloatRegister _
+    { return {type: "print", reg: "int", op: op, rg: rg, text: text() }; }
+  / op:"PTM" _ rg:IntRegister _
+    { return {type: "print", reg: "int", op: op, rg: rg, read: "int", text: text() }; }
+  / op:"PTM.S" _ rg:IntRegister _
+    { return {type: "print", reg: "int", op: op, rg: rg, read: "float", text: text() }; }
+
 
 Register
   = IntRegister / FloatRegister
 
 IntOperation
   = "ADD" / "SUB" / "DIV" / "MULT" { return text(); } 
+
 IntImOperation
   = "ADDI" / "SUBI" / "DIVI" / "MULTI" { return text(); }
 

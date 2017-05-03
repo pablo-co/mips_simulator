@@ -31,13 +31,20 @@ function callParser() {
   }
 
   currentPlayedCycle = 0;
+  $("#runtime-link").show();
   $("#runtime-link").tab("show");
+  $("#code-link").hide();
+  next();
+}
 
-  return instruction_set;
+function next() {
+  $("#runtime-execution").show();
+  callNextClockCycle();
 }
 
 function play() {
   automaticExec = setInterval(callNextClockCycle, 1000);
+  $("#runtime-execution").show();
   $("#play").hide();
   $("#pause").show();
 }
@@ -46,6 +53,16 @@ function pause() {
   clearInterval(automaticExec);
   $("#play").show();
   $("#pause").hide();
+}
+
+function stop() {
+  pause();
+  currentPlayedCycle--;
+  resetState();
+  $("#code-link").show();
+  $("#code-link").tab("show");
+  $("#runtime-link").hide();
+  $("#parse_button")[0].disabled = false;
 }
 
 function callNextClockCycle() {

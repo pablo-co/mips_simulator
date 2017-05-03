@@ -55,18 +55,21 @@ BEQZ R4, LOOP</div>
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="btn-group" role="group" aria-label="...">
+          <button id="stop" type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true" onClick="stop();"></span>
+          </button>
           <button id="play" type="button" class="btn btn-default">
             <span class="glyphicon glyphicon-play" aria-hidden="true" onClick="play();"></span>
           </button>
           <button id="pause" type="button" class="btn btn-default">
             <span class="glyphicon glyphicon-pause" aria-hidden="true" onClick="pause();"></span>
           </button>
-          <button type="button" class="btn btn-default" onClick="callNextClockCycle();">
+          <button type="button" class="btn btn-default" onClick="next()">
             <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
           </button>
         </div>
       </div>
-      <div class="panel-body">
+      <div id="runtime-execution" class="panel-body">
         <div class="row">
           <div id="runtime-container" class="col-xs-12 col-md-6">
           </div>

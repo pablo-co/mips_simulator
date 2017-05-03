@@ -75,6 +75,19 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
   return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:branch_delay_slots};
 };
 
+function resetState() {
+  memory = build_memory(400);
+  memorySize = 100;
+  next_instruction = 0;
+  next_instruction_value_when_predicting_branch = 0;
+  forwarding_enabled = false;
+  branch_prediction_taken = false;
+  current_clock_cycle = 0
+  previous_clock_cycles = []
+  callParser();
+  $("#cycle").html("");
+}
+
 function createStage(name,next_stage,stage_operation) {
   return {
     name: name,

@@ -1,6 +1,7 @@
 $(function () {
   $("#pause").hide();
   $("#code-footer").hide();
+  $("#runtime-link").hide();
 
   var editor = ace.edit("editor");
   editor.setTheme("ace/theme/monokai");

@@ -1,20 +1,30 @@
-require 'rack/contrib/try_static'
+require "rack"
+require "rack/contrib/try_static"
 
-use Rack::Deflater
+# Enable proper HEAD responses
+use Rack::Head
+
+# Add basic auth if configured
+if ENV["HTTP_USER"] && ENV["HTTP_PASSWORD"]
+  use Rack::Auth::Basic, "Restricted Area" do |username, password|
+    [username, password] == [ENV["HTTP_USER"], ENV["HTTP_PASSWORD"]]
+  end
+end
+
+# Attempt to serve static HTML files
 use Rack::TryStatic,
-  root: 'tmp',
-  urls: %w[/],
-  try: %w[.html index.html /index.html]
+    :root => "build",
+    :urls => %w[/],
+    :try => ['.html', 'index.html', '/index.html']
 
-FIVE_MINUTES=300
-
+# Serve a 404 page if all else fails
 run lambda { |env|
   [
     404,
     {
-      'Content-Type'  => 'text/html',
-      'Cache-Control' => "public, max-age=#{FIVE_MINUTES}"
+      "Content-Type" => "text/html",
+      "Cache-Control" => "public, max-age=60"
     },
-    ['File not found']
+    File.open("build/404/index.html", File::RDONLY)
   ]
 }

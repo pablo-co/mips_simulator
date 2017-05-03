@@ -16,8 +16,9 @@ end
 
 configure :build do
   activate :minify_css
+  activate :directory_indexes
+  activate :asset_hash
   activate :minify_javascript
-  activate :minify_html
 end
 
-set :build_dir, 'tmp'
+set :build_dir, 'build'

@@ -21,7 +21,7 @@ function drawCode() {
     var active = line.cycle_started == current_clock_cycle;
     var stage = currentStage(line);
     updateHistory(line.num, stage);
-    content.lines.push({body: line.text, active: active, stages: getHistory(line.num)});
+    content.lines.push({body: line.text, active: active, stages: getHistory(line.num), exception: line.exception});
   }
   var html = window.templates["code-runtime-template"](content);
   $("#runtime-container").html(html);

@@ -224,9 +224,6 @@ function exOperation(instruction) {
     case "SUB":
       instruction.op_result = value1 - value2; 
       break;
-    case "SUB":
-      instruction.op_result = value1 - value2; 
-      break;
     case "ADDI":
       instruction.op_result = value1 + instruction.im; 
       break;

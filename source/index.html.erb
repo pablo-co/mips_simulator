@@ -3,7 +3,9 @@
 
 <% content_for :assets do %>
   <%= javascript_include_tag "https://github.com/pegjs/pegjs/releases/download/v0.10.0/peg-0.10.0.min.js" %>
-  <%= javascript_include_tag "http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-latest.js" %>==
+  <%= javascript_include_tag "http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-latest.js" %>
+  <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/bootstrap-slider.min.js" %>
+  <%= stylesheet_link_tag "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/css/bootstrap-slider.min.css" %>
 <% end %>
 
 <%= partial "code_runtime" %>
@@ -68,6 +70,7 @@ BEQZ R4, LOOP</div>
             <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
           </button>
         </div>
+        <input id="play-speed" data-slider-id="speedSlider" type="text" data-slider-min="0.1" data-slider-max="10" data-slider-step="0.1" data-slider-value="1"/>
       </div>
       <div id="runtime-execution" class="panel-body">
         <div class="row">

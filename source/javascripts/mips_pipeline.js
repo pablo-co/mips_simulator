@@ -3,6 +3,7 @@ var global_instructions;
 var instructionsHistory;
 var currentPlayedCycle;
 var automaticExec;
+var lastPlayValue = 1;
 
 function callParser() {
   var editor = ace.edit("editor");
@@ -43,7 +44,9 @@ function next() {
 }
 
 function play() {
-  automaticExec = setInterval(callNextClockCycle, 1000);
+  var value = window.playSpeed.slider("getValue");
+  automaticExec = setInterval(callNextClockCycle, value * 1000);
+  $("#speedSlider").show();
   $("#runtime-execution").show();
   $("#play").hide();
   $("#pause").show();
@@ -51,6 +54,7 @@ function play() {
 
 function pause() {
   clearInterval(automaticExec);
+  $("#speedSlider").hide();
   $("#play").show();
   $("#pause").hide();
 }
@@ -59,6 +63,7 @@ function stop() {
   pause();
   currentPlayedCycle--;
   resetState();
+  $("#speedSlider").hide();
   $("#code-link").show();
   $("#code-link").tab("show");
   $("#runtime-link").hide();
@@ -66,6 +71,12 @@ function stop() {
 }
 
 function callNextClockCycle() {
+  var value = window.playSpeed.slider("getValue");
+  if (value != lastPlayValue) {
+    lastPlayValue = value;
+    clearInterval(automaticExec);
+    automaticExec = setInterval(callNextClockCycle, value * 1000);
+  }
   nextClockCycle(global_pipeline,global_instructions);
 }
 

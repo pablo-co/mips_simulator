@@ -13,15 +13,22 @@ function drawExecution() {
 }
 
 function drawCode() {
-  ++currentPlayedCycle;
-  $("#cycle").html(currentPlayedCycle);
+  $("#cycle").html(current_clock_cycle);
   var content = {lines:[]};
   for (var i = 0; i < global_instructions.length; ++i) {
     var line = global_instructions[i];
     var active = line.cycle_started == current_clock_cycle;
     var stage = currentStage(line);
     updateHistory(line.num, stage);
-    content.lines.push({body: line.text, active: active, stages: getHistory(line.num), exception: line.exception});
+    var stages = getHistory(line.num);
+    var stalled = stages[0] && stages[0].name === "STALL";
+    content.lines.push({
+      body: line.text,
+      active: active,
+      stages: stages,
+      exception: line.exception,
+      stalled: stalled
+    });
   }
   var html = window.templates["code-runtime-template"](content);
   $("#runtime-container").html(html);
@@ -44,6 +51,8 @@ function getHistory(num) {
     stages.unshift(null);
   }
 
+  console.log(stages);
+
   return stages;
 }
 
@@ -53,8 +62,8 @@ function updateHistory(num, stage) {
   }
 
   var len = instructionsHistory[num].length;
-  if (instructionsHistory[num][len - 1] == stage) {
-    instructionsHistory[num].push({cycle: current_clock_cycle, name: "Stall"});
+  if (instructionsHistory[num][len - 1] && instructionsHistory[num][len - 1].name == stage) {
+    instructionsHistory[num].push({cycle: current_clock_cycle, name: "STALL"});
   } else {
     instructionsHistory[num].push({cycle: current_clock_cycle, name: stage});
   }

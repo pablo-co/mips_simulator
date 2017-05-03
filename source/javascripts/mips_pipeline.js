@@ -7,9 +7,10 @@ var lastPlayValue = 1;
 
 function callParser() {
   var editor = ace.edit("editor");
+  var instruction_set;
+
   $("#code-footer").hide();
   $("#code-errors").html("");
-  var instruction_set;
   $("#parse_button")[0].disabled = true;
 
   try {
@@ -35,7 +36,7 @@ function callParser() {
   $("#runtime-link").show();
   $("#runtime-link").tab("show");
   $("#code-link").hide();
-  next();
+  drawExecution();
 }
 
 function next() {
@@ -61,7 +62,6 @@ function pause() {
 
 function stop() {
   pause();
-  currentPlayedCycle--;
   resetState();
   $("#speedSlider").hide();
   $("#code-link").show();

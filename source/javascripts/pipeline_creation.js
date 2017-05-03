@@ -85,6 +85,11 @@ function resetState() {
   current_clock_cycle = 0
   previous_clock_cycles = []
   callParser();
+  global_pipeline = null;
+  global_instructions = null;
+  instructionsHistory = null;
+  automaticExec = null;
+  lastPlayValue = 1;
   $("#cycle").html("");
 }
 

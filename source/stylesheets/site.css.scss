@@ -6,3 +6,12 @@
 .editor {
   height: 30em;
 }
+
+.diagram {
+	width: 100%;
+	display: none;
+}
+
+.diagram-hover:hover img {
+	display: block;
+}

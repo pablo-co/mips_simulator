@@ -128,6 +128,7 @@ function wbOperation(instruction) {
       if (instruction.op_result != null) {
         register_array[instruction.rs].value = instruction.op_result;
         register_array[instruction.rs].temp_value = null;
+        instruction.op_result = null;
       }
       if (instruction.rs != null && instruction.rt != null && (instruction.rd != null || instruction.im != null)) {
         //R type instructions

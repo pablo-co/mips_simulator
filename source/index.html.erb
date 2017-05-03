@@ -100,29 +100,32 @@ BEQZ R4, LOOP</div>
         <div class=row">
           <div class="col-xs-12 col-md-6">
             <div class="input-group">
-              <span class="input-group-addon" id="superscaling">Amount of superscaling</span>
-              <input id="superscaling_input" type="text" class="form-control" aria-describedby="superscaling" value="1">
+              <span class="input-group-addon" id="superscaling">Superscaling amount</span>
+              <input id="superscaling_input" type="number" step="1" min="1" max="7" class="form-control" aria-describedby="superscaling" value="1">
             </div>
+            <p>Amount of IF and ID stages present on the pipeline. When this value is 1, the pipeline has <a class="diagram-hover">this architecture.<img id="non-superscalar-diagram" src="images/non-superscalar-diagram.png" class="diagram"></img></a> Otherwise, it has <a class="diagram-hover">this architecture.<img id="superscalar-diagram" src="images/superscalar-diagram.png" class="diagram"></img></a>
+            </p>
+
           </div>
 
           <div class="col-xs-12 col-md-6">
             <div class="input-group">
               <span class="input-group-addon" id="int_registers"># of Int Registers</span>
-              <input id="int_registers_input" type="text" class="form-control" aria-describedby="int_registers" value="8">
+              <input id="int_registers_input" type="number" step="1" min="8" max="64" class="form-control" aria-describedby="int_registers" value="8">
             </div>
           </div>
 
           <div class="col-xs-12 col-md-6">
             <div class="input-group">
               <span class="input-group-addon" id="float_registers"># of Float Registers</span>
-              <input id="float_registers_input" type="text" class="form-control" aria-describedby="float_registers" value="8">
+              <input id="float_registers_input" type="number" step="1" min="8" max="64" class="form-control" aria-describedby="float_registers" value="8">
             </div>
           </div>
 
           <div class="col-xs-12 col-md-6">
             <div class="input-group">
-              <span class="input-group-addon" id="size_mem">Memory size in words</span>
-              <input id="size_mem_input" type="text" class="form-control" aria-describedby="size_mem" value="8">
+              <span class="input-group-addon" id="size_mem">Memory size (words)</span>
+              <input id="size_mem_input" type="number" step="1" min="8" max="2048" class="form-control" aria-describedby="size_mem" value="8">
             </div>
           </div>
 
@@ -130,10 +133,11 @@ BEQZ R4, LOOP</div>
             <div class="input-group">
               <span class="input-group-addon" id="branch_delay">Branch delay slots</span>
               <select id="branch_delay_input" class="form-control" aria-describedby="branch_delay">
-                <option value="true">Allow branch delay slots</option>
-                <option value="false">Disallow branch delay slots</option>
+                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
               </select>
             </div>
+            <p>When enabled, instruction(s) after a branch will be allowed to continue executing regardless of the branch result. When disabled, said instruction(s) are flushed from the pipeline if (on execution stage) it is determined the branch had to be taken. When branches are predicted taken, there is a single branch delay slot (the second slot is automatically filled by the prediction). When branches are not predicted taken there are two branch delay slots (until the branch reaches execution).</p>
           </div>
 
           <div class="col-xs-12 col-md-6">
@@ -143,7 +147,9 @@ BEQZ R4, LOOP</div>
                 <option value="true">Has forwarding</option>
                 <option value="false">No forwarding</option>
               </select>
+
             </div>
+            <p>Forwards values from the last execution stage and MEM stage back to ID stage.</p>
           </div>
 
           <div class="col-xs-12 col-md-6">
@@ -154,6 +160,7 @@ BEQZ R4, LOOP</div>
                 <option value="false">Predict never taken</option>
               </select>
             </div>
+            <p>When branches are not predicted taken, execution continues as normal and the instructions are flushed if the branch had to be taken (see branch delay slot details). If branches are predicted taken, once it is determined that the instruction is a branch (ID) the next instruction that will be fetched is the one with the branch label, flushing it in case on EX stage it is determined the branch shouldn't be taken.</p>
           </div>
 
         </div>

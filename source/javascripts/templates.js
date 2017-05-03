@@ -51,8 +51,6 @@ function getHistory(num) {
     stages.unshift(null);
   }
 
-  console.log(stages);
-
   return stages;
 }
 

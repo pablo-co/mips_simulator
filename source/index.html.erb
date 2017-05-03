@@ -16,6 +16,11 @@
     <a id="code-link" href="#code" aria-controls="code" role="tab" data-toggle="tab">Code</a>
   </li>
   <li role="presentation">
+    <a id="conf-link" href="#conf" aria-controls="conf" role="tab" data-toggle="tab">
+      Configuration
+    </a>
+  </li>
+  <li role="presentation">
     <a id="runtime-link" href="#runtime" aria-controls="runtime" role="tab" data-toggle="tab">
       Runtime
       <span class="badge" id="cycle"></span>
@@ -83,9 +88,76 @@ BEQZ R4, LOOP</div>
             </div>
             <div id="memory-file" class="cols-xs-12 col-md-6">
             </div>
+          </div>
+        </div>
+        <div class="panel-footer"></div>
+      </div>
+    </div>
+  </div>
+  <div role="tabpanel" class="tab-pane" id="conf">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class=row">
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="superscaling">Amount of superscaling</span>
+              <input id="superscaling_input" type="text" class="form-control" aria-describedby="superscaling" value="1">
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="int_registers"># of Int Registers</span>
+              <input id="int_registers_input" type="text" class="form-control" aria-describedby="int_registers" value="8">
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="float_registers"># of Float Registers</span>
+              <input id="float_registers_input" type="text" class="form-control" aria-describedby="float_registers" value="8">
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="size_mem">Memory size in words</span>
+              <input id="size_mem_input" type="text" class="form-control" aria-describedby="size_mem" value="8">
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="branch_delay">Branch delay slots</span>
+              <select id="branch_delay_input" class="form-control" aria-describedby="branch_delay">
+                <option value="true">Allow branch delay slots</option>
+                <option value="false">Disallow branch delay slots</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="forwarding">Forwarding</span>
+              <select id="forwarding_input" class="form-control">
+                <option value="true">Has forwarding</option>
+                <option value="false">No forwarding</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-md-6">
+            <div class="input-group">
+              <span class="input-group-addon" id="branch_pred">Branch prediction</span>
+              <select id="branch_pred_input" class="form-control">
+                <option value="true">Predict always taken</option>
+                <option value="false">Predict never taken</option>
+              </select>
+            </div>
+          </div>
+
         </div>
       </div>
-      <div class="panel-footer"></div>
     </div>
   </div>
 </div>

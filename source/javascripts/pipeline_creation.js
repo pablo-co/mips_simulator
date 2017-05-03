@@ -1,13 +1,13 @@
 var float_registers;
 var integer_registers;
-var memory = build_memory(400);
-var memorySize = 100;
+var memory;
+var memorySize;
 var next_instruction = 0;
 var next_instruction_value_when_predicting_branch = 0;
 var forwarding_enabled = false;
-var branch_prediction_taken = false; // 0 - No branch prediction, 1 - branch predict not taken, 2 - branch predict taken.
+var branch_prediction_taken = false;
 
-function createPipeline(superscaling_amount,int_registers_amount,float_registers_amount,branch_delay_slots,forwarding,branch_prediction) {
+function createPipeline(superscaling_amount, int_registers_amount, float_registers_amount, branch_delay_slots, forwarding, branch_prediction, mem_size) {
 
   var stages = [];
   var executionStages = [];
@@ -15,6 +15,9 @@ function createPipeline(superscaling_amount,int_registers_amount,float_registers
 
   float_registers = initializeRegisters(float_registers_amount);
   integer_registers = initializeRegisters(int_registers_amount);
+
+  memory = build_memory(mem_size * 4);
+  memorySize = mem_size;
 
   forwarding_enabled = forwarding;
   branch_prediction_taken = branch_prediction;

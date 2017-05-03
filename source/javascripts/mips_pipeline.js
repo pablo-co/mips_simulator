@@ -26,7 +26,17 @@ function callParser() {
     return;
   }
   global_instructions = instruction_set;
-  global_pipeline = createPipeline(1,32,32,true,false,true); 
+
+  global_pipeline = createPipeline(
+    getScalarAmt(),
+    getIntReg(),
+    getFloatReg(),
+    getBranchSlots(),
+    getForwarding(),
+    getBranchPred(),
+    getMemSize()
+  );
+
   instructionsHistory = [];
   for (var i = 0; i < instruction_set.length; ++i) {
     instructionsHistory.push([]);
@@ -37,6 +47,34 @@ function callParser() {
   $("#runtime-link").tab("show");
   $("#code-link").hide();
   drawExecution();
+}
+
+function getScalarAmt() {
+  return parseInt($("#superscaling_input").val());
+}
+
+function getIntReg() {
+  return parseInt($("#int_registers_input").val());
+}
+
+function getFloatReg() {
+  return parseInt($("#float_registers_input").val());
+}
+
+function getBranchSlots() {
+  return $("#branch_delay_input").val() == "true";
+}
+
+function getForwarding() {
+  return $("#forwarding_input").val() == "true";
+}
+
+function getBranchPred() {
+  return $("#branch_pred_input").val() == "true";
+}
+
+function getMemSize() {
+  return parseInt($("#size_mem_input").val());
 }
 
 function next() {

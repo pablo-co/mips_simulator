@@ -30,25 +30,7 @@ function drawCode() {
     var stage = currentStage(line);
     updateHistory(line.num, stage);
     var stages = getHistory(line.num);
-    var stalled = stages[0] && stages[1] && stages[0].name === stages[1].name;
-    var stall_insts = [];
-    console.log(i);
-    console.log(stages);
-
-    for (var j = stages.length - 1; j > 0; --j) {
-      if (stages[j] && stages[j - 1] && stages[j].name == stages[j - 1].name) {
-        stall_insts.push(j - 1);
-        stall_insts.push(j);
-      }
-    }
-
-    var index = stall_insts.indexOf(0);
-    stall_insts.splice(index, 1);
-
-    for (var j = 0; j < stall_insts.length; ++j) {
-      stages[stall_insts[j]].name = "STALL";
-    }
-
+    var stalled = stages[0] && stages[0].name == "STALL";
     content.lines.push({
       body: line.text,
       active: active,
@@ -89,7 +71,24 @@ function updateHistory(num, stage) {
   if (stage === null) {
     return;
   }
-  instructionsHistory[num].push({cycle: current_clock_cycle, name: stage});
+
+  var len = instructionsHistory[num].length;
+  var stalled = false;
+  for (var i = len - 1; i > len - 4; --i) {
+    var name = instructionsHistory[num][i] && instructionsHistory[num][i].name;
+    console.log(num, i, name);
+    if (name == stage) {
+      console.log(name, stage);
+      stalled = true;
+      break;
+    }
+  }
+
+  if (stalled) {
+    instructionsHistory[num].push({cycle: current_clock_cycle, name: "STALL"});
+  } else {
+    instructionsHistory[num].push({cycle: current_clock_cycle, name: stage});
+  }
 }
 
 function currentStage(line) {

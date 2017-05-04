@@ -398,7 +398,6 @@ function fpOperation(instruction) {
 }
 
 function multOperation(instruction) {
-    console.log("MULT");
   var value1, value2;
   if (instruction.rt != null && integer_registers[instruction.rt] != null) {
     if (integer_registers[instruction.rt].temp_value != null) {

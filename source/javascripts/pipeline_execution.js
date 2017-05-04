@@ -28,9 +28,23 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
     }
     if (stage.next_stage != "UNKNOWN") {
       if (stage.next_stage.instruction == null) {
-        stage.next_stage.instruction = stage.instruction;
-        stage.instruction = null;
-        stage.next_stage.operation_performed = false;
+        if ((pipeline.superscaling_amount == 1 && stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && stage.next_stage.name == "WB")) { //Last execution operation
+          var min_starting_cycle = Number.MAX_VALUE;
+          pipeline.execution_graph.forEach(function(inner_stage) {
+            if (inner_stage.next_stage != "UNKNOWN" && inner_stage.instruction != null && inner_stage.next_stage != null && ((pipeline.superscaling_amount == 1 && inner_stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && inner_stage.next_stage.name == "WB")) && inner_stage.instruction.cycle_started < min_starting_cycle) {
+              min_starting_cycle = inner_stage.instruction.cycle_started;
+            }
+          });
+          if (stage.instruction.cycle_started == min_starting_cycle) {
+            stage.next_stage.instruction = stage.instruction;
+            stage.instruction = null;
+            stage.next_stage.operation_performed = false;
+          }
+        } else {
+          stage.next_stage.instruction = stage.instruction;
+          stage.instruction = null;
+          stage.next_stage.operation_performed = false;
+        }
       }	
     }
     else { // ID
@@ -61,22 +75,11 @@ function performAllStageOperations(pipeline) {
     try {
       if (stage.next_stage == "UNKNOWN") { // ID operation
         idOperations.push(stage);
-      } else if (stage.next_stage != null && ((pipeline.superscaling_amount == 1 && stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && stage.next_stage.name == "WB"))) {
+      } else if (stage.next_stage != null && ((pipeline.superscaling_amount == 1 && stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && stage.next_stage.name == "WB"))) { //Last execution operation
         executionOperations.push(stage);
       } else {
         stage.operation_performed = stage.stage_operation(stage.instruction);
       }
-    } catch (e) {
-      stage.instruction.exception = true;
-      stage.operation_performed = true; //So that the instruction continues until WB.
-    }
-  });
-  idOperations.sort(function (operation1, operation2) {
-    return operation1.instruction.sequence_number > operation2.instruction.sequence_number;
-  });
-  idOperations.forEach(function(stage) {
-    try {
-      stage.operation_performed = stage.stage_operation(stage.instruction);
     } catch (e) {
       stage.instruction.exception = true;
       stage.operation_performed = true; //So that the instruction continues until WB.
@@ -87,6 +90,18 @@ function performAllStageOperations(pipeline) {
     return operation1.instruction.sequence_number > operation2.instruction.sequence_number;
   });
   executionOperations.forEach(function(stage) {
+    try {
+      stage.operation_performed = stage.stage_operation(stage.instruction);
+    } catch (e) {
+      stage.instruction.exception = true;
+      stage.operation_performed = true; //So that the instruction continues until WB.
+    }
+  });
+
+  idOperations.sort(function (operation1, operation2) {
+    return operation1.instruction.sequence_number > operation2.instruction.sequence_number;
+  });
+  idOperations.forEach(function(stage) {
     try {
       stage.operation_performed = stage.stage_operation(stage.instruction);
     } catch (e) {

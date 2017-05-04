@@ -481,7 +481,7 @@ function fpmultOperation(instruction) {
       break;
   }
 
-  if (isNaN(instruction_op_result)) {
+  if (isNaN(instruction.op_result)) {
     throw "Not a number";
   }
 

@@ -44,7 +44,7 @@ function createPipeline(superscaling_amount, int_registers_amount, float_registe
     MULT[3] = createStage("MULT4",MEM,multOperation);
     FPMULT[6] = createStage("FPMULT7",MEM,fpmultOperation);
   } else {
-    FP[4] = createStage("FP5",WB.fpOperation);
+    FP[4] = createStage("FP5",WB,fpOperation);
     MULT[3] = createStage("MULT4",WB,multOperation);
     FPMULT[6] = createStage("FPMULT7",WB,fpmultOperation);
   }
@@ -510,7 +510,7 @@ function idOperation(instruction) {
   }
 
   if (instruction.op == "SW" || instruction.op == "SW.S") {
-    if (reserveRegisterForReading(register_array[instruction.rt],instruction.sequence_number)) {
+    if (reserveRegisterForReading(integer_registers[instruction.rt],instruction.sequence_number)) {
       if (reserveRegisterForReading(register_array[instruction.rs],instruction.sequence_number)) {
         return true;
       } else {

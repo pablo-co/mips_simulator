@@ -116,7 +116,8 @@ function tryToInsertNewInstructionIntoPipeline(pipeline,instruction_set){
     if (fetching_stage.instruction == null){
       if (instruction_set[next_instruction] != null) {	
         instruction_set[next_instruction].cycle_started = current_clock_cycle;
-        instruction_set[next_instruction].sequence_number = global_sequence_number++;
+        instruction_set[next_instruction].sequence_number = global_sequence_number;
+        global_sequence_number++;
         fetching_stage.instruction = instruction_set[next_instruction];
         next_instruction++;
       }

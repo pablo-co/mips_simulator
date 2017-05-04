@@ -31,11 +31,11 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
         if ((pipeline.superscaling_amount == 1 && stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && stage.next_stage.name == "WB")) { //Last execution operation
           var min_starting_cycle = Number.MAX_VALUE;
           pipeline.execution_graph.forEach(function(inner_stage) {
-            if (inner_stage.next_stage != "UNKNOWN" && inner_stage.instruction != null && inner_stage.next_stage != null && ((pipeline.superscaling_amount == 1 && inner_stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && inner_stage.next_stage.name == "WB")) && inner_stage.instruction.cycle_started < min_starting_cycle) {
-              min_starting_cycle = inner_stage.instruction.cycle_started;
+            if (inner_stage.next_stage != "UNKNOWN" && inner_stage.instruction != null && inner_stage.next_stage != null && ((pipeline.superscaling_amount == 1 && inner_stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && inner_stage.next_stage.name == "WB")) && inner_stage.instruction.sequence_number < min_starting_cycle) {
+              min_starting_cycle = inner_stage.instruction.sequence_number;
             }
           });
-          if (stage.instruction.cycle_started == min_starting_cycle) {
+          if (stage.instruction.sequence_number == min_starting_cycle) {
             stage.next_stage.instruction = stage.instruction;
             stage.instruction = null;
             stage.next_stage.operation_performed = false;
@@ -50,12 +50,12 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
     else { // ID
       var min_starting_cycle = Number.MAX_VALUE;
       pipeline.execution_graph.forEach(function(inner_stage) {
-        if (inner_stage.next_stage == "UNKNOWN" && inner_stage.instruction != null && inner_stage.instruction.cycle_started < min_starting_cycle) {
-          min_starting_cycle = inner_stage.instruction.cycle_started;
+        if (inner_stage.next_stage == "UNKNOWN" && inner_stage.instruction != null && inner_stage.instruction.sequence_number < min_starting_cycle) {
+          min_starting_cycle = inner_stage.instruction.sequence_number;
         }
       });
       var execution_stage = pipeline.execution_stages[deduceExecutionPipeline(stage.instruction)];
-      if (execution_stage.instruction == null && stage.instruction.cycle_started == min_starting_cycle) {
+      if (execution_stage.instruction == null && stage.instruction.sequence_number == min_starting_cycle) {
         execution_stage.instruction = stage.instruction;
         stage.instruction = null;
         execution_stage.operation_performed = false;

@@ -396,6 +396,7 @@ function fpOperation(instruction) {
 }
 
 function multOperation(instruction) {
+    console.log("MULT");
   var value1, value2;
   if (instruction.rt != null && integer_registers[instruction.rt] != null) {
     if (integer_registers[instruction.rt].temp_value != null) {
@@ -430,7 +431,7 @@ function multOperation(instruction) {
       break;
   }
 
-  if (isNaN(instruction_op_result)) {
+  if (isNaN(instruction.op_result)) {
     throw "Not a number";
   }
 

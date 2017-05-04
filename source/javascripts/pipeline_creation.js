@@ -7,6 +7,7 @@ var next_instruction_value_when_predicting_branch = 0;
 var forwarding_enabled = false;
 var branch_prediction_taken = false;
 var log = [];
+var global_sequence_number = 0;
 
 function createPipeline(superscaling_amount, int_registers_amount, float_registers_amount, branch_delay_slots, forwarding, branch_prediction, mem_size) {
 
@@ -63,7 +64,7 @@ function createPipeline(superscaling_amount, int_registers_amount, float_registe
   executionStages.push(MULT[0]);
 
   stages.push(FPMULT[6]);
-  for (i = 3; i >= 1;i--) {
+  for (i = 6; i >= 1;i--) {
     FPMULT[i-1] = createStage("FPMULT" + i,FPMULT[i],null);
     stages.push(FPMULT[i-1]);
   }
@@ -96,6 +97,7 @@ function resetState() {
   automaticExec = null;
   lastPlayValue = 1;
   log = [];
+  global_sequence_number = 0;
   $("#cycle").html("");
 }
 
@@ -508,8 +510,8 @@ function idOperation(instruction) {
   }
 
   if (instruction.op == "SW" || instruction.op == "SW.S") {
-    if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) {
-      if (reserveRegisterForReading(register_array[instruction.rs],instruction.cycle_started)) {
+    if (reserveRegisterForReading(register_array[instruction.rt],instruction.sequence_number)) {
+      if (reserveRegisterForReading(register_array[instruction.rs],instruction.sequence_number)) {
         return true;
       } else {
         freeRegisterAfterReading(register_array[instruction.rt]);
@@ -531,9 +533,9 @@ function idOperation(instruction) {
         });
       }
       if (instruction.rs != null) { 
-        if (reserveRegisterForReading(register_array[instruction.rs],instruction.cycle_started)) { 
+        if (reserveRegisterForReading(register_array[instruction.rs],instruction.sequence_number)) { 
           if (instruction.rt != null) {
-            if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) { 
+            if (reserveRegisterForReading(register_array[instruction.rt],instruction.sequence_number)) { 
               return true;
             } else {
               freeRegisterAfterReading(register_array[instruction.rs]);
@@ -545,20 +547,20 @@ function idOperation(instruction) {
         }
       }
     } else {
-      if (reserveRegisterForWriting(register_array[instruction.rs],instruction.cycle_started)) { // First reservation successful
+      if (reserveRegisterForWriting(register_array[instruction.rs],instruction.sequence_number)) { // First reservation successful
         if (instruction.rt != null) {
-          if (reserveRegisterForReading(register_array[instruction.rt],instruction.cycle_started)) { // second reservation successful
+          if (reserveRegisterForReading(register_array[instruction.rt],instruction.sequence_number)) { // second reservation successful
             if (instruction.rd != null) { // Third reservation necessary
-              if (reserveRegisterForReading(register_array[instruction.rd],instruction.cycle_started)) { // Third reservation successful
+              if (reserveRegisterForReading(register_array[instruction.rd],instruction.sequence_number)) { // Third reservation successful
                 return true;
               } else { // Third reservation not successful
                 freeRegisterAfterReading(register_array[instruction.rt]);
-                freeRegisterAfterWriting(register_array[instruction.rs]);
+                //freeRegisterAfterWriting(register_array[instruction.rs]);
                 return false;
               }
             }
           } else { // Second reservation not successful.
-            freeRegisterAfterWriting(register_array[instruction.rs]);
+            //freeRegisterAfterWriting(register_array[instruction.rs]);
             return false;
           }
         }

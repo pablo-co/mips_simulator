@@ -23,19 +23,28 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
     if(stage.next_stage == null) {
       stage.instruction.cycle_finished = current_clock_cycle;
       stage.instruction = null;
+      //stage.operation_performed == false;
       return;
     }
     if (stage.next_stage != "UNKNOWN") {
       if (stage.next_stage.instruction == null) {
         stage.next_stage.instruction = stage.instruction;
         stage.instruction = null;
+        stage.next_stage.operation_performed = false;
       }	
     }
-    else {
+    else { // ID
+      var min_starting_cycle = Number.MAX_VALUE;
+      pipeline.execution_graph.forEach(function(inner_stage) {
+        if (inner_stage.next_stage == "UNKNOWN" && inner_stage.instruction != null && inner_stage.instruction.cycle_started < min_starting_cycle) {
+          min_starting_cycle = inner_stage.instruction.cycle_started;
+        }
+      });
       var execution_stage = pipeline.execution_stages[deduceExecutionPipeline(stage.instruction)];
-      if (execution_stage.instruction == null) {
+      if (execution_stage.instruction == null && stage.instruction.cycle_started == min_starting_cycle) {
         execution_stage.instruction = stage.instruction;
         stage.instruction = null;
+        execution_stage.operation_performed = false;
       }
     }
 
@@ -43,10 +52,26 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
 }
 
 function performAllStageOperations(pipeline) {
+  var idOperations = []; // To attempt their execution in order.
   pipeline.execution_graph.forEach(function(stage) {
-    if (stage.instruction == null || stage.stage_operation == null) {
+    if (stage.instruction == null || stage.stage_operation == null || stage.operation_performed == true) {
       return;
     }
+    try {
+      if (stage.next_stage == "UNKNOWN") { // ID operation
+        idOperations.push(stage);
+      } else {
+        stage.operation_performed = stage.stage_operation(stage.instruction);
+      }
+    } catch (e) {
+      stage.instruction.exception = true;
+      stage.operation_performed = true; //So that the instruction continues until WB.
+    }
+  });
+  idOperations.sort(function (operation1, operation2) {
+    return operation1.instruction.sequence_number > operation2.instruction.sequence_number;
+  });
+  idOperations.forEach(function(stage) {
     try {
       stage.operation_performed = stage.stage_operation(stage.instruction);
     } catch (e) {
@@ -61,6 +86,7 @@ function tryToInsertNewInstructionIntoPipeline(pipeline,instruction_set){
     if (fetching_stage.instruction == null){
       if (instruction_set[next_instruction] != null) {	
         instruction_set[next_instruction].cycle_started = current_clock_cycle;
+        instruction_set[next_instruction].sequence_number = global_sequence_number++;
         fetching_stage.instruction = instruction_set[next_instruction];
         next_instruction++;
       }

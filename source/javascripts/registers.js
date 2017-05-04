@@ -20,7 +20,7 @@ function reserveRegisterForReading(register,instruction_number_requesting){
 }
 
 function reserveRegisterForWriting(register,instruction_number_requesting){
-	if(!register.available_for_writing) {
+	if(!register.available_for_writing && register.instruction_requesting != instruction_number_requesting) {
 		if (! $.inArray(register.waiting_for_lock,instruction_number_requesting)) {
 			register.waiting_for_lock.push(instruction_number_requesting);
 		}

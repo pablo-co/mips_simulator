@@ -239,9 +239,9 @@ function exOperation(instruction) {
   }
   if (instruction.rs != null && float_registers[instruction.rs] != null){
     if (float_registers[instruction.rs].temp_value != null) {
-      value3 = float_registers[instruction.rs].temp_value;
+      value3float = float_registers[instruction.rs].temp_value;
     } else {
-      value3 = float_registers[instruction.rs].value;
+      value3float = float_registers[instruction.rs].value;
     }
   }
   switch(instruction.op) {

@@ -1,6 +1,19 @@
 {
+  function flatten(arr) {
+    var result = [];
+    for (var i = 0, len = arr.length; i < len; i++) {
+      result = result.concat(Array.isArray(arr[i])? flatten(arr[i]) :
+          [arr[i]]);
+    }
+    return result;
+  }
+
   function makeInteger(o) {
     return parseInt(o.join(""), 10);
+  }
+
+  function makeFloat(o) {
+    return parseFloat(flatten(o).join(""));
   }
 }
 
@@ -39,7 +52,7 @@ Instruction
     "," _ rd:FloatRegister
     { return {type: "float", reg: "float", op: op, rs: rs, rt: rt, rd: rd, text: text()}; }
   / op:FloatImOperation _ rs:FloatRegister _ "," _ rt:FloatRegister _
-    "," _ im:Immediate
+    "," _ im:FloatImmediate
     { return {type: "floati", reg: "float", op: op, rs: rs, rt: rt, im: im, text: text()}; }
   / op:IntMemOperation _ rs:IntRegister _ "," _ im:Immediate _
     "(" rt:IntRegister ")"
@@ -122,8 +135,14 @@ FloatRegister
 Immediate
   = negative:("-"?) num:Integer { return negative ? num * -1 : num }
 
+FloatImmediate
+  = negative:("-"?) num:Float { return negative ? num * -1 : num }
+
 Integer
   = digits:[0-9]+ { return makeInteger(digits); }
+
+Float
+  = digits:([0-9]+ ("." [0-9]+)?) { return makeFloat(digits); }
 
 _ "whitespace"
   = [ \t\n\r]*

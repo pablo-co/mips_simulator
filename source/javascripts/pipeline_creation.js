@@ -468,13 +468,13 @@ function fpmultOperation(instruction) {
       instruction.op_result = value1 * value2; 
       break;
     case "DIV.S":
-      instruction.op_result = Math.floor(value1 / value2); 
+      instruction.op_result = value1 / value2; 
       break;
     case "MULTI.S":
       instruction.op_result = value1 * instruction.im; 
       break;
     case "DIVI.S":
-      instruction.op_result = Math.floor(value1 / instruction.im); 
+      instruction.op_result = value1 / instruction.im; 
       break;
     default:
       throw "Unimplemented operation";

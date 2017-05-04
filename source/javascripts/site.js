@@ -11,3 +11,4 @@
 //= require "memory"
 //= require "registers"
 //= require "bootstrap"
+//= require "code"

@@ -4,6 +4,7 @@ $(function () {
   $("#runtime-link").hide();
 
   var editor = ace.edit("editor");
+  window.editor = editor;
   editor.setTheme("ace/theme/monokai");
   editor.getSession().setMode("ace/mode/javascript");
 

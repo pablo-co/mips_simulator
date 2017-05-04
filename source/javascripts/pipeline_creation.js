@@ -437,12 +437,13 @@ function multOperation(instruction) {
     throw "Not a number";
   }
 
-  return true;
 
   if (forwarding_enabled && instruction.op_result != null) {
     integer_registers[instruction.rs].temp_value = instruction.op_result;
     freeRegisterAfterWriting(integer_registers[instruction.rs]);
   }
+
+  return true;
 }
 
 function fpmultOperation(instruction) {

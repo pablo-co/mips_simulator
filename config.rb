@@ -11,7 +11,7 @@ end
 activate :sprockets
 
 configure :development do
-  activate :livereload
+  #activate :livereload
 end
 
 configure :build do

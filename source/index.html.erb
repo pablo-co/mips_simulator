@@ -83,6 +83,18 @@ BEQZ R0, LOOP</div>
             <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
           </button>
         </div>
+
+        <div class="btn-group pull-right" role="group" aria-label="...">
+          <button id="integer" type="button" class="btn btn-default" onClick="integerMem();">
+            Integer
+          </button>
+          <button id="float" type="button" class="btn btn-default" onClick="floatMem();">
+            Float
+          </button>
+          <button id="binary" type="button" class="btn btn-default" onClick="binaryMem();">
+            Binary
+          </button>
+        </div>
         <input id="play-speed" data-slider-id="speedSlider" type="text" data-slider-min="0.1" data-slider-max="10" data-slider-step="0.1" data-slider-value="1"/>
       </div>
       <div id="runtime-execution" class="panel-body">
@@ -121,14 +133,14 @@ BEQZ R0, LOOP</div>
           <div class="col-xs-12 col-md-6">
             <div class="input-group">
               <span class="input-group-addon" id="int_registers"># of Int Registers</span>
-              <input id="int_registers_input" type="number" step="1" min="8" max="64" class="form-control" aria-describedby="int_registers" value="8">
+              <input id="int_registers_input" type="number" step="1" min="8" max="64" class="form-control" aria-describedby="int_registers" value="16">
             </div>
           </div>
 
           <div class="col-xs-12 col-md-6">
             <div class="input-group">
               <span class="input-group-addon" id="float_registers"># of Float Registers</span>
-              <input id="float_registers_input" type="number" step="1" min="8" max="64" class="form-control" aria-describedby="float_registers" value="8">
+              <input id="float_registers_input" type="number" step="1" min="8" max="64" class="form-control" aria-describedby="float_registers" value="16">
             </div>
           </div>
 

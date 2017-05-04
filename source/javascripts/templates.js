@@ -1,3 +1,11 @@
+var memory_mode = "integer";
+
+var mem_op = {
+  binary: read_binary,
+  integer: read_int,
+  floating: read_float,
+};
+
 $(function() {
   window.templates = {};
   $(".template").each(function(i, el) {
@@ -103,10 +111,25 @@ function drawFloat() {
   $("#float-register-file").html(html);
 }
 
+function integerMem() {
+  memory_mode = "integer";
+  drawMem();
+}
+
+function floatMem() {
+  memory_mode = "floating";
+  drawMem();
+}
+
+function binaryMem() {
+  memory_mode = "binary";
+  drawMem();
+}
+
 function drawMem() {
   var state = [];
   for (var i = 0; i < memorySize; i += 4) {
-    var value = read_int(memory, i);
+    var value = mem_op[memory_mode](memory, i);
     if (value != 0) {
       state.push({value: value, addr: i});
     }

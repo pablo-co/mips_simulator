@@ -55,3 +55,7 @@ function read_float(memory, address) {
     return null;
   }
 }
+
+function read_binary(memory, address) {
+  return read_int(memory, address).toString(2);
+}

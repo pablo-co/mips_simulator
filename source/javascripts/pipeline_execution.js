@@ -136,7 +136,7 @@ function deduceExecutionPipeline(instruction) {
   if (instruction.op == "MULT" || instruction.op == "DIV" || instruction.op == "MULTI" || instruction.op == "DIVI") {
     return 2;
   }
-  if (instruction.reg == "float" && !(instruction.op == "LW.S" || instruction.op == "SW.S")) {
+  if (instruction.reg == "float" && !(instruction.op == "LW.S" || instruction.op == "SW.S" || instruction.op == "BEQ.S" || instruction.op == "BEQZ.S" || instruction.op == "BNE.S" || instruction.op == "BNEZ.S" )) {
     return 1;
   }
   return 0;

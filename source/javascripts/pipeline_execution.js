@@ -53,6 +53,7 @@ function moveAllInstructionsCurrentlyInPipeline(pipeline) {
 
 function performAllStageOperations(pipeline) {
   var idOperations = []; // To attempt their execution in order.
+  var executionOperations = []; // To attempt their execution in order.
   pipeline.execution_graph.forEach(function(stage) {
     if (stage.instruction == null || stage.stage_operation == null || stage.operation_performed == true) {
       return;
@@ -60,6 +61,8 @@ function performAllStageOperations(pipeline) {
     try {
       if (stage.next_stage == "UNKNOWN") { // ID operation
         idOperations.push(stage);
+      } else if (stage.next_stage != null && ((pipeline.superscaling_amount == 1 && stage.next_stage.name == "MEM") || (pipeline.superscaling_amount != 1 && stage.next_stage.name == "WB"))) {
+        executionOperations.push(stage);
       } else {
         stage.operation_performed = stage.stage_operation(stage.instruction);
       }
@@ -72,6 +75,18 @@ function performAllStageOperations(pipeline) {
     return operation1.instruction.sequence_number > operation2.instruction.sequence_number;
   });
   idOperations.forEach(function(stage) {
+    try {
+      stage.operation_performed = stage.stage_operation(stage.instruction);
+    } catch (e) {
+      stage.instruction.exception = true;
+      stage.operation_performed = true; //So that the instruction continues until WB.
+    }
+  });
+
+  executionOperations.sort(function (operation1, operation2) {
+    return operation1.instruction.sequence_number > operation2.instruction.sequence_number;
+  });
+  executionOperations.forEach(function(stage) {
     try {
       stage.operation_performed = stage.stage_operation(stage.instruction);
     } catch (e) {

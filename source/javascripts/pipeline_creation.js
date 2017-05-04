@@ -78,7 +78,7 @@ function createPipeline(superscaling_amount, int_registers_amount, float_registe
     fetchingStages.push(IF);
   }
 
-  return {execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:branch_delay_slots};
+  return {superscaling_amount:superscaling_amount,execution_graph:stages, execution_stages:executionStages,fetching_stages:fetchingStages,branch_delay_slots:branch_delay_slots};
 };
 
 function resetState() {
